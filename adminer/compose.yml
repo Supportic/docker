@@ -1,0 +1,19 @@
+networks:
+  default:
+    name: service_network
+
+services:
+  adminer:
+    image: adminer:4.8.1-standalone
+    env_file:
+      - ./.docker/service/adminer/.env
+    platform: linux/amd64
+    container_name: service_adminer
+    restart: unless-stopped
+    user: adminer
+    ports:
+      - 8080:8080
+    volumes:
+      - ./.docker/service/adminer/index.php:/var/www/html/index.php:ro
+      - ./.docker/service/adminer/custom-theme:/var/www/html/designs/custom-theme:ro
+      - ./.docker/service/adminer/plugins-enabled:/var/www/html/plugins-enabled
