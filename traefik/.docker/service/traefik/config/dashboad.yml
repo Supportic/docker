@@ -1,0 +1,12 @@
+http:
+  middlewares:
+    simpleAuth:
+      basicAuth:
+        users:
+          - "admin:$apr1$ee6.oFbq$MwWVfEeuqOubztXS/3XGS/"
+  routers:
+    dashboard:
+      rule: "Host(`monitor.localhost`)"
+      entrypoints: ["web"]
+      middlewares: ["simpleAuth"]
+      service: "api@internal"

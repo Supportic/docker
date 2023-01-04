@@ -1,0 +1,35 @@
+# Docker configuration backend
+global:
+  sendAnonymousUsage: false
+log:
+  level: INFO
+  format: common
+# API and dashboard configuration
+# Enables the web UI and tells Traefik to listen to docker
+api:
+  insecure: false
+  dashboard: true
+  debug: false
+
+providers:
+  providersThrottleDuration: 2s
+  docker:
+    # default if no rule is defined by a label (containername.localhost)
+    defaultRule: "Host(`{{ trimPrefix `/` .Name }}.localhost`)"
+    endpoint: 'unix:///var/run/docker.sock'
+    exposedByDefault: false
+    # the docker network containers should connect to
+    network: "service"
+    watch: true
+    swarmMode: false
+  file:
+    directory: "/etc/traefik/conf"
+    # automatically watch for file changes
+    watch: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
