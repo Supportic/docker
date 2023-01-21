@@ -1,0 +1,22 @@
+# https://www.compose-spec.io/
+
+volumes:
+  gotools:
+    name: ${PROJECT_NAME}-gotools
+
+x-base-image:
+  &default-base-image
+  working_dir: /workspace/app
+  volumes:
+    - .:/workspace:cached
+    - gotools:/go/bin
+    - ~/.gitconfig:/home/${UNAME}/.gitconfig:ro
+    - ~/.ssh/known_hosts:/home/${UNAME}/.ssh/known_hosts
+    - ${SSH_AUTH_SOCK}:/ssh-agent
+  environment:
+    - SSH_AUTH_SOCK=/ssh-agent
+services:
+  go:
+    <<: *default-base-image
+  tinygo:
+    <<: *default-base-image

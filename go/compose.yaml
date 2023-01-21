@@ -1,0 +1,48 @@
+# https://www.compose-spec.io/
+
+# Docker-Compose 3.4 Extension Fields for reuseable parts (starts with "x-")
+x-base-image:
+  &default-base-image
+  user: ${UID}
+  hostname: localhost
+  init: true
+  working_dir: /go/src/app
+  volumes:
+    - ./app:/go/src/app
+  stdin_open: true
+  tty: true
+services:
+  go:
+    <<: *default-base-image
+    build:
+      context: .
+      dockerfile: .docker/service/go/Dockerfile
+      args:
+        - GO_VER=${GO_VER}
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+        - PASS=${PASS}
+      target: develop
+    image: ${PROJECT_NAME}/go:0.0.1
+    container_name: ${CONTAINER_NAME_GO:-goplay-go}
+  tinygo:
+    <<: *default-base-image
+    build:
+      context: .
+      dockerfile: .docker/service/tinygo/Dockerfile
+      args:
+        - TINYGO_VER=${TINYGO_VER}
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+        - PASS=${PASS}
+      target: develop
+    image: ${PROJECT_NAME}/tinygo:0.0.1
+    container_name: ${CONTAINER_NAME_TINYGO:-goplay-tinygo}
+
+networks:
+  default:
+    name: goplay
