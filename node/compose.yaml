@@ -1,0 +1,26 @@
+# https://www.compose-spec.io/
+
+services:
+  node:
+    build:
+      context: .
+      dockerfile: .docker/service/node/Dockerfile
+      args:
+        - NODE_VER=${NODE_VER}
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+      target: develop
+    image: ${PROJECT_NAME}-node:0.0.1
+    platform: linux/amd64
+    container_name: ${NODE_CONTAINER_NAME:-node}
+    user: ${UID:-1000}
+    working_dir: /app
+    volumes:
+      - ./app:/app
+      - node_modules:/app/node_modules
+
+volumes:
+  node_modules:
+    name: ${PROJECT_NAME}_node_modules
