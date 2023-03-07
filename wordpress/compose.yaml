@@ -1,0 +1,80 @@
+volumes:
+  db_data:
+  wordpress_data:
+networks:
+  default:
+    name: backend
+    external: false
+
+services:
+  ########################
+  # Wordpress & Web Server
+  ########################
+  wordpress:
+    image: wordpress:${WP_VER:-latest}
+    platform: linux/amd64
+    ports:
+      - ${WORDPRESS_PORT_HOST:-80}:80
+    depends_on:
+      - db
+    restart: unless-stopped
+    init: true
+    user: ${UID:-1000}:${GID:-1000}
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./.docker/service/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - ./wordpress/themes:/var/www/html/wp-content/themes
+      - ./wordpress/plugins:/var/www/html/wp-content/plugins
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: ${DBNAME:-wordpress}
+      WORDPRESS_DB_USER: ${DBUSER:-user}
+      WORDPRESS_DB_PASSWORD: ${DBPASS:-password}
+      WORDPRESS_DEBUG: ${WP_DEBUG:-1}
+      WORDPRESS_CONFIG_EXTRA: |
+        define('CORE_UPGRADE_SKIP_NEW_BUNDLED', true);
+        define('WP_MEMORY_LIMIT', '256M');
+    networks:
+      - default
+  ########################
+  # Wordpress CLI
+  ########################
+  wpcli:
+    image: wordpress:${WPCLI_VER:-cli}
+    user: ${UID:-1000}:${GID:-1000}
+    depends_on:
+      - wordpress
+    volumes:
+      - wordpress_data:/var/www/html
+  ########################
+  # Database
+  ########################
+  db:
+    image: mariadb:10.10-jammy
+    platform: linux/amd64
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./.docker/service/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${DBNAME:-wordpress}
+      - MYSQL_USER=${DBUSER:-user}
+      - MYSQL_PASSWORD=${DBPASS:-password}
+      - MYSQL_ROOT_PASSWORD=${DBROOTPASS:-root}
+    expose:
+      - 3306
+    networks:
+      - default
+  ########################
+  # Database UI
+  ########################
+  adminer:
+    image: adminer:${ADMINER_VER:-4.8.1-standalone}
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file:
+      - .adminer.env
+    ports:
+      - ${ADMINER_PORT_HOST:-8080}:8080
+    networks:
+      - default
