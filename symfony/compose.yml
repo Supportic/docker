@@ -1,0 +1,113 @@
+services:
+  ########################
+  # Development
+  ########################
+  php:
+    build:
+      context: ./.docker/service/php
+      args:
+        - PHP_VER=${PHP_VER}
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+        - PASS=${PASS}
+      target: develop
+    image: ${PROJECT_NAME}-php:0.0.1
+    init: true
+    platform: linux/amd64
+    container_name: ${PHP_CONTAINER_NAME:-php}
+    working_dir: ${WORKDIR:-/var/www/app}
+    user: ${UID:-1000}
+    hostname: localhost
+    ports:
+      - ${PHP_PORT_HOST:-9000}:${PHP_PORT_CONTAINER:-9000}
+    volumes:
+      - ./app:${WORKDIR:-/var/www/app}
+      - ./.docker/data/logs/php:/var/log
+    depends_on:
+      - db
+
+  ########################
+  # Webserver
+  ########################
+  nginx:
+    image: nginx:${NGINX_VER:-latest}
+    platform: linux/amd64
+    container_name: ${NGINX_CONTAINER_NAME:-nginx}
+    restart: unless-stopped
+    ports:
+      - ${NGINX_PORT_HOST:-80}:80
+    volumes:
+      - ./app:${WORKDIR:-/var/www/app}
+      - ./.docker/data/logs/nginx:/var/log/nginx
+      - ./.docker/service/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+  ########################
+  # Database
+  ########################
+  db:
+    image: ${DB_IMAGE:-mariadb}:${DB_IMAGE_VER:-10.10-jammy}
+    platform: linux/amd64
+    container_name: ${DB_CONTAINER_NAME:-db}
+    restart: unless-stopped
+    env_file:
+      - .db.env
+    ports:
+      - ${DB_PORT_HOST:-3306}:${DB_PORT_CONTAINER:-3306}
+    volumes:
+      - dbdata:${DB_VOLUME_PATH:-/var/lib/mysql}
+      - ./.docker/service/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+
+  ########################
+  # Node
+  ########################
+  node:
+    build:
+      context: .
+      dockerfile: .docker/service/node/Dockerfile
+      args:
+        - PROJECT_NAME=${PROJECT_NAME}
+        - NODE_VER=${NODE_VER}
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+      target: develop
+    image: ${PROJECT_NAME}-node:0.0.1
+    init: true
+    platform: linux/amd64
+    container_name: ${NODE_CONTAINER_NAME:-node}
+    user: ${UID:-1000}
+    entrypoint: /bin/sh
+    working_dir: /app
+    ports:
+      - 3000:3000
+    volumes:
+      - ./app:/app
+
+  ########################
+  # Database UI
+  ########################
+  adminer:
+    image: adminer:${ADMINER_VER:-4.8.1-standalone}
+    env_file:
+      - ./.docker/service/adminer/.env
+    platform: linux/amd64
+    container_name: ${ADMINER_CONTAINER_NAME:-adminer}
+    restart: unless-stopped
+    user: adminer
+    ports:
+      - ${ADMINER_PORT_HOST:-8080}:8080
+    volumes:
+      - ./.docker/service/adminer/index.php:/var/www/html/index.php:ro
+      - ./.docker/service/adminer/custom-theme:/var/www/html/designs/custom-theme:ro
+      - ./.docker/service/adminer/plugins-enabled:/var/www/html/plugins-enabled
+
+volumes:
+  dbdata:
+    name: ${PROJECT_NAME}_dbdata
+
+networks:
+  default:
+    name: ${PROJECT_NAME}_backend

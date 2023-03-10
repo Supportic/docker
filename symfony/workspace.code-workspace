@@ -1,0 +1,51 @@
+// https://code.visualstudio.com/docs/editor/variables-reference
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Project"
+    },
+    {
+      "path": "./app",
+      "name": "App"
+    }
+  ],
+  "settings": {
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bower_components": true,
+      "**/*.code-search": true,
+      "**/var": true,
+      "**/vendor": true,
+      "composer.lock": true,
+      "package-lock.json": true
+    },
+
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+
+      // workspace dir
+      "app": true
+    }
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Listen for Xdebug",
+        "type": "php",
+        "request": "launch",
+        "port": 9003,
+        "pathMappings": {
+          "/var/www/shortlink": "${workspaceFolder:App}"
+        }
+      }
+    ],
+    "compounds": []
+  }
+}

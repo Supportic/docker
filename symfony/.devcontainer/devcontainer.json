@@ -1,0 +1,77 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/docker-existing-docker-compose
+{
+  "name": "Shortlink Generator",
+
+  // Update the 'dockerComposeFile' list if you have more compose files or use different names.
+  // The .devcontainer/docker-compose.yml file contains any overrides you need/want to make.
+  "dockerComposeFile": ["../compose.yaml", "compose.yaml"],
+
+  // The 'service' property is the name of the service for the container that VS Code should use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+  "service": "devcontainer",
+  // start specific services in your Docker Compose config.
+  "runServices": ["nginx", "php" , "adminer", "db"],
+
+  // Uncomment to connect as a non-root user if you've added one. Default is last USER statement in Dockerfile. See https://aka.ms/vscode-remote/containers/non-root.
+  "remoteUser": "docker",
+  // "containerUser": "docker",
+
+  // dont create extra image to match UID/GUID of host, we do it ourselfs: https://github.com/microsoft/vscode-remote-release/issues/3264#issuecomment-651084059
+  "updateRemoteUserUID": false,
+
+  // Uncomment to use Docker from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
+  // allow control of the host's docker daemon from the container
+  // "mounts": [
+  // "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+  // ],
+
+  // The optional 'workspaceFolder' property is the path VS Code should open by default when connected. This is typically a file mount in .devcontainer/docker-compose.yml
+  "workspaceFolder": "/workspace",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "TheNouillet.symfony-vscode",
+        "nadim-vscode.symfony-code-snippets",
+        "bmewburn.vscode-intelephense-client",
+        "xdebug.php-debug",
+        "zobo.php-intellisense",
+        "junstyle.twig-language",
+        "esbenp.prettier-vscode",
+        "syler.sass-indented",
+        "Vue.volar",
+        "hollowtree.vue-snippets",
+        "mhutchie.git-graph",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "php.validate.executablePath": "/usr/local/bin/php",
+        "terminal.integrated.defaultProfile.linux": "bash",
+
+        "symfony-vscode.shellExecutable": "/bin/bash",
+        "symfony-vscode.consolePath": "/usr/local/bin/symfony",
+        "symfony-vscode.phpExecutablePath": "/usr/local/bin/php",
+        "files.associations": {
+          "**/views/**/*.html": "twig",
+          "*.tpl": "twig"
+        },
+
+        "emmet.includeLanguages": {
+          "twig": "html"
+        }
+      }
+    }
+  }
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Uncomment the next line if you want to keep your containers running after VS Code shuts down.
+  // "shutdownAction": "none",
+
+  // build the development image before extending (does not work since it tries to process the info of the docker-compose.yml first)
+  // "initializeCommand": "docker compose build php",
+
+  // run commands after the CONTAINER IS CREATED
+  // "postCreateCommand": ""
+}
