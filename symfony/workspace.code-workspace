@@ -42,7 +42,7 @@
         "request": "launch",
         "port": 9003,
         "pathMappings": {
-          "/var/www/shortlink": "${workspaceFolder:App}"
+          "/var/www/app": "${workspaceFolder:App}"
         }
       }
     ],
