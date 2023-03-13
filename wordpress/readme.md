@@ -1,20 +1,21 @@
 # Wordpress Playground
 
-Removing or stopping the containers will not remove the source code. Only when the volume gets deleted.
+Copy `.env.sample` -> `.env` and adjust variables.
 
 http://localhost
+http://localhost/wp-admin
 
-**start**  
-`docker compose up -d wordpress db adminer`
+**install**  
+`make install`
+
+**start**
+`make start`
 
 **enter container**  
-`docker compose exec wordpress sh`
+`make shell`
 
 **enter wpcli container**
-`docker compose run --rm wpcli sh`
-
-**execute wpcli commands**
-`docker compose run --rm wpcli wp ...`
+`make wpcli`
 
 **remove everything**  
-`docker compose down -v --rmi all`
+`make erase`

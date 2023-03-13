@@ -26,7 +26,7 @@ services:
       - ./wordpress/themes:/var/www/html/wp-content/themes
       - ./wordpress/plugins:/var/www/html/wp-content/plugins
     environment:
-      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_HOST: ${DBHOST:-db:3306}
       WORDPRESS_DB_NAME: ${DBNAME:-wordpress}
       WORDPRESS_DB_USER: ${DBUSER:-user}
       WORDPRESS_DB_PASSWORD: ${DBPASS:-password}
@@ -34,24 +34,42 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define('CORE_UPGRADE_SKIP_NEW_BUNDLED', true);
         define('WP_MEMORY_LIMIT', '256M');
-    networks:
-      - default
+
   ########################
   # Wordpress CLI
   ########################
   wpcli:
     image: wordpress:${WPCLI_VER:-cli}
+    platform: linux/amd64
     user: ${UID:-1000}:${GID:-1000}
+    init: true
+    environment:
+      WORDPRESS_DB_HOST: ${DBHOST:-db:3306}
+      WORDPRESS_DB_NAME: ${DBNAME:-wordpress}
+      WORDPRESS_DB_USER: ${DBUSER:-user}
+      WORDPRESS_DB_PASSWORD: ${DBPASS:-password}
     depends_on:
-      - wordpress
+      # wait until DB is ready
+      db:
+        condition: service_healthy
+    working_dir: /var/www/html
     volumes:
       - wordpress_data:/var/www/html
+      - ./wordpress/themes:/var/www/html/wp-content/themes
+      - ./wordpress/plugins:/var/www/html/wp-content/plugins
+
   ########################
   # Database
   ########################
   db:
     image: mariadb:10.10-jammy
     platform: linux/amd64
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD --silent
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 20
     volumes:
       - db_data:/var/lib/mysql
       - ./.docker/service/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
@@ -63,8 +81,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${DBROOTPASS:-root}
     expose:
       - 3306
-    networks:
-      - default
+
   ########################
   # Database UI
   ########################
@@ -76,5 +93,3 @@ services:
       - .adminer.env
     ports:
       - ${ADMINER_PORT_HOST:-8080}:8080
-    networks:
-      - default
