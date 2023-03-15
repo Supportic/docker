@@ -13,9 +13,9 @@ start:
 stop:
 	docker compose stop
 down:
-	docker-compose down
+	docker compose down
 erase:
-	docker-compose down -v --rmi all
+	docker compose down -v --rmi all
 
 install: install-container install-deps
 
