@@ -5,3 +5,4 @@
 !/wordpress/plugins/index.php
 
 /.env
+/.db.env

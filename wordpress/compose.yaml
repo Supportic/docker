@@ -11,48 +11,68 @@ services:
   # Wordpress & Web Server
   ########################
   wordpress:
-    image: wordpress:${WP_VER:-latest}
+    build: 
+      context: ./.docker/service/wordpress
+      args:
+        - WP_VER=${WP_VER:-latest}
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+        - PASS=${PASS}
+      target: develop
+    image: ${PROJECT_NAME}/wordpress:0.0.1
+    container_name: ${PROJECT_NAME}-wordpress
+    working_dir: /var/www/html
+    hostname: localhost
     platform: linux/amd64
     ports:
       - ${WORDPRESS_PORT_HOST:-80}:80
-    depends_on:
-      - db
     restart: unless-stopped
     init: true
-    user: ${UID:-1000}:${GID:-1000}
+    user: ${UID:-1000}
     volumes:
       - wordpress_data:/var/www/html
-      - ./.docker/service/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - ./.docker/service/wordpress/php.ini:/usr/local/etc/php/conf.d/php.ini
+      # - ./.docker/service/wordpress/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
       - ./wordpress/themes:/var/www/html/wp-content/themes
       - ./wordpress/plugins:/var/www/html/wp-content/plugins
+    env_file:
+      - .db.env
+      - .wordpress.env
     environment:
-      WORDPRESS_DB_HOST: ${DBHOST:-db:3306}
-      WORDPRESS_DB_NAME: ${DBNAME:-wordpress}
-      WORDPRESS_DB_USER: ${DBUSER:-user}
-      WORDPRESS_DB_PASSWORD: ${DBPASS:-password}
-      WORDPRESS_DEBUG: ${WP_DEBUG:-1}
       WORDPRESS_CONFIG_EXTRA: |
-        define('CORE_UPGRADE_SKIP_NEW_BUNDLED', true);
-        define('WP_MEMORY_LIMIT', '256M');
+        define( 'CORE_UPGRADE_SKIP_NEW_BUNDLED', getenv_docker('WORDPRESS_CORE_UPGRADE_SKIP_NEW_BUNDLED', false) );
+        define( 'WP_MEMORY_LIMIT', getenv_docker('WORDPRESS_MEMORY_LIMIT', '512M') );
+        define( 'SAVEQUERIES', false );
+    depends_on:
+      - db
 
   ########################
   # Wordpress CLI
   ########################
   wpcli:
-    image: wordpress:${WPCLI_VER:-cli}
+    build: 
+      context: ./.docker/service/wpcli
+      args:
+        - WPCLI_VER=${WPCLI_VER:-cli}
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+        - PASS=${PASS}
+    image:  ${PROJECT_NAME}/wpcli:0.0.1
     platform: linux/amd64
-    user: ${UID:-1000}:${GID:-1000}
     init: true
-    environment:
-      WORDPRESS_DB_HOST: ${DBHOST:-db:3306}
-      WORDPRESS_DB_NAME: ${DBNAME:-wordpress}
-      WORDPRESS_DB_USER: ${DBUSER:-user}
-      WORDPRESS_DB_PASSWORD: ${DBPASS:-password}
+    user: ${UID:-1000}
+    container_name: ${PROJECT_NAME}-wpcli
+    working_dir: /var/www/html
+    env_file:
+      - .db.env
     depends_on:
       # wait until DB is ready
       db:
         condition: service_healthy
-    working_dir: /var/www/html
     volumes:
       - wordpress_data:/var/www/html
       - ./wordpress/themes:/var/www/html/wp-content/themes
@@ -64,6 +84,10 @@ services:
   db:
     image: mariadb:${DB_VER:-10.10-jammy}
     platform: linux/amd64
+    restart: unless-stopped
+    container_name: ${PROJECT_NAME}-db
+    env_file:
+      - .db.env
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD --silent
       start_period: 5s
@@ -73,12 +97,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./.docker/service/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-    restart: unless-stopped
-    environment:
-      - MYSQL_DATABASE=${DBNAME:-wordpress}
-      - MYSQL_USER=${DBUSER:-user}
-      - MYSQL_PASSWORD=${DBPASS:-password}
-      - MYSQL_ROOT_PASSWORD=${DBROOTPASS:-root}
     expose:
       - 3306
 
@@ -89,6 +107,7 @@ services:
     image: adminer:${ADMINER_VER:-4.8.1-standalone}
     platform: linux/amd64
     restart: unless-stopped
+    container_name: ${PROJECT_NAME}-adminer
     env_file:
       - .adminer.env
     ports:
