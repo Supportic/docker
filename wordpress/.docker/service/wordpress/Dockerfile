@@ -4,6 +4,9 @@ LABEL autodelete="true"
 
 USER root
 
+# enable mod_headers for htaccess
+RUN a2enmod headers
+
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
 COPY php.ini /usr/local/etc/php/conf.d/php.ini
