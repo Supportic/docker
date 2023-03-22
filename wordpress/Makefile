@@ -1,12 +1,12 @@
 .SILENT:
 .ONESHELL:
 SHELL = /bin/bash
-WP_CLI = docker compose run --rm wpcli wp
+WP_CLI_BASH = docker compose run --rm wpcli bash
 
 shell:
 	docker compose exec wordpress bash
 wpcli:
-	docker compose run --rm wpcli bash
+	$(WP_CLI_BASH)
 
 start:
 	docker compose up -d wordpress db adminer
@@ -24,7 +24,7 @@ install-container:
 	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") 2> /dev/null || true
 
 install-deps:
-	$(WP_CLI) core install --url="http://localhost" --title=WPDemo --admin_user=admin --admin_password=admin --admin_email=admin@example.com --locale=en_US --skip-email --quiet
+	$(WP_CLI_BASH) -c "wp core install --url="http://localhost" --title=WPDemo --admin_user=admin --admin_password=admin --admin_email=admin@example.com --locale=en_US --skip-email --quiet && wp option update timezone_string "Europe/Berlin" && wp option update time_format "H:i""
 	$(WP_CLI) plugin uninstall akismet hello
 	$(WP_CLI) plugin install query-monitor --activate
 	
