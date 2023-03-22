@@ -44,7 +44,6 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define( 'CORE_UPGRADE_SKIP_NEW_BUNDLED', getenv_docker('WORDPRESS_CORE_UPGRADE_SKIP_NEW_BUNDLED', false) );
         define( 'WP_MEMORY_LIMIT', getenv_docker('WORDPRESS_MEMORY_LIMIT', '512M') );
-        define( 'SAVEQUERIES', false );
     depends_on:
       - db
 
