@@ -26,5 +26,5 @@ install-container:
 install-deps:
 	$(WP_CLI) core install --url="http://localhost" --title=WPDemo --admin_user=admin --admin_password=admin --admin_email=admin@example.com --locale=en_US --skip-email --quiet
 	$(WP_CLI) plugin uninstall akismet hello
-	$(WP_CLI) plugin install debug-bar query-monitor wp-debugging --activate
+	$(WP_CLI) plugin install query-monitor --activate
 	
