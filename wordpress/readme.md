@@ -20,3 +20,7 @@ http://localhost/wp-admin
 
 **remove everything**  
 `make erase`
+
+## Info
+
+WordPress options: https://codex.wordpress.org/Option_Reference
