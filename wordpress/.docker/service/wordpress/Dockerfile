@@ -4,8 +4,8 @@ LABEL autodelete="true"
 
 USER root
 
-# enable mod_headers for htaccess
-RUN a2enmod headers
+# enable mod_headers for htaccess (only when apache is in use)
+RUN if [ -x "$(command -v a2enmod)" ]; then a2enmod headers; fi
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
@@ -32,7 +32,7 @@ RUN set -ex \
   # set user PW
   && echo "${UNAME}:${PASS}" | chpasswd
 
-RUN chown "${UID}:${GID}" /var/www/html/wp-content
+RUN chown -R "${UID}:${GID}" /var/www/html/wp-content
 
 FROM base as develop
 

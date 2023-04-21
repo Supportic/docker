@@ -19,6 +19,7 @@ erase:
 	docker compose down -v --rmi all
 
 install: install-container install-deps
+rebuild: install-container
 
 install-container: 
 	docker compose up -d wordpress db adminer
