@@ -2,6 +2,7 @@
 .ONESHELL:
 SHELL = /bin/bash
 WP_CLI_BASH = docker compose run --rm wpcli bash
+WP_CLI = docker compose run --rm wpcli
 
 shell:
 	docker compose exec wordpress bash
