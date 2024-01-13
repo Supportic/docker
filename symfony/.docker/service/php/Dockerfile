@@ -37,8 +37,8 @@ FROM base as develop
 # php -r 'phpinfo();' | grep -i conf
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-# order important
-RUN install-php-extensions xdebug
+# order important - creates docker-php-ext-xdebug.ini
+RUN install-php-extensions xdebug && rm "$PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini"
 COPY xdebug.ini $PHP_INI_DIR/conf.d/xdebug.ini
 
 RUN export DEBIAN_FRONTEND=noninteractive \
