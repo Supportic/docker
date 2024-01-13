@@ -2,15 +2,13 @@ version: '3.7'
 
 services:
   devcontainer:
-    # Note that the path of the Dockerfile and context is relative to the *primary* compose.yaml file (the first in the devcontainer.json "dockerComposeFile"
     build:
       context: .
       dockerfile: .devcontainer/Dockerfile
       args:
         - BASE_IMAGE=${PROJECT_NAME}-php:0.0.1
         - UNAME=${UNAME}
-        - NODE_VERSION=${NODE_VERSION}
-    container_name: ${PROJECT_NAME}_devcontainer
+    container_name: ${PROJECT_NAME}-devcontainer
     init: true
     hostname: localhost
 
@@ -23,6 +21,4 @@ services:
       - ~/.gitconfig:/home/${UNAME}/.gitconfig:ro
       # dont mount .ssh dir here, the ssh-agent has everything we need
       - ~/.ssh/known_hosts:/home/${UNAME}/.ssh/known_hosts
-      - ${SSH_AUTH_SOCK}:/ssh-agent
-    environment:
-      - SSH_AUTH_SOCK=/ssh-agent
+

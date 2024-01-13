@@ -10,7 +10,7 @@
   // The 'service' property is the name of the service for the container that VS Code should use. Update this value and .devcontainer/docker-compose.yml to the real service name.
   "service": "devcontainer",
   // start specific services in your Docker Compose config.
-  "runServices": ["nginx", "php" , "adminer", "db"],
+  "runServices": ["nginx", "php" , "adminer", "db", "mailhog"],
 
   // Uncomment to connect as a non-root user if you've added one. Default is last USER statement in Dockerfile. See https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "docker",

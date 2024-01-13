@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=symfony-php:dev
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 # Avoid warnings by switching to noninteractive for these commands
@@ -38,8 +38,8 @@ RUN echo -e "#!/bin/sh\n\
 ### FINISH DOCKER INSTALL
 
 # install nvm (setup .bashrc), Node.js
-ARG NVM_VERSION=0.39.3
-ARG NODE_VERSION=18.13.0
+ARG NVM_VERSION=0.39.7
+ARG NODE_VERSION=20.11.0
 ENV NVM_DIR=/home/${UNAME}/.nvm
 
 # export home only for the current RUN layer for root because of install script

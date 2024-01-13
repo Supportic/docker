@@ -7,7 +7,7 @@
 `make shell`
 
 **remove containers**  
-`docker compose down`
+`make down`
 
 **remove containers + DB**  
 `docker compose down -v`
@@ -20,14 +20,9 @@ Install 'Dev Containers' extension. Click on symbol in bottom left corner and ch
 
 We extend the php image by installing node inside in order to use IDE intellisense while developing in devcontainer.
 
-## Info
-
-Frontend: http://localhost  
-Database UI: http://localhost:8080/
-
 ## Notes
 
-- create project with symfony 5.4 `symfony new <PROJECT_NAME> --dir=. --version=lts [--webapp]`
+- create project with symfony 6.4 `symfony local:new --dir=. --version=lts --php="8.2" --no-git`
 - --webapp installs all below by default
   - add doctrine db migration commands to symfony console: `composer require orm`
   - add make commands to symfony console: `composer require --dev symfony/maker-bundle`

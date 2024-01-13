@@ -1,7 +1,6 @@
 /.docker/data/logs/*
 
 /.env
-/.db.env
 
 # +----------------------------+
 # |    Keep .gitkeep files     |
