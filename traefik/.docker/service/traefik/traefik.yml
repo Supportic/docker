@@ -21,7 +21,6 @@ providers:
     # the docker network containers should connect to
     network: "service"
     watch: true
-    swarmMode: false
   file:
     directory: "/etc/traefik/conf"
     # automatically watch for file changes

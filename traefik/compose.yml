@@ -4,7 +4,7 @@ networks:
 
 services:
   traefik:
-    image: traefik:2.9
+    image: traefik:3.2
     platform: linux/amd64
     container_name: service_traefik
     restart: unless-stopped
@@ -13,7 +13,7 @@ services:
       - 443:443
     volumes:
       # listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./.docker/service/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./.docker/service/traefik/config:/etc/traefik/conf
   nginx:
