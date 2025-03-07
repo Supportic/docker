@@ -21,7 +21,9 @@ RUN set -ex \
   # add user
   && adduser -D --gecos "" --ingroup "${GNAME}" --shell /bin/bash --uid "${UID}" "${UNAME}" \
   # add user to group
-  && addgroup "${UNAME}" www-data \
+  # && addgroup "${UNAME}" www-data \
   # set user PW
   && echo "${UNAME}:${PASS}" | chpasswd
-  
+
+# shell prompt
+RUN printf "\nPS1=\"\u@\h:\w# \"\nalias ll=\"ls -la\"" >> "${HOME}/.bashrc"

@@ -1,5 +1,9 @@
+ARG WPCLI_VER=cli
 ARG WP_VER=latest
-FROM wordpress:${WP_VER} as base
+
+FROM wordpress:${WPCLI_VER} AS wpcli
+
+FROM wordpress:${WP_VER} AS base
 LABEL autodelete="true"
 
 USER root
@@ -12,7 +16,11 @@ ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/do
 COPY php.ini /usr/local/etc/php/conf.d/php.ini
 
 # install Composer
-RUN curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# RUN curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# install wpcli
+COPY --from=wpcli /usr/local/bin/wp /usr/bin/wp
 
 # setup User
 ARG UID=1000
@@ -32,9 +40,10 @@ RUN set -ex \
   # set user PW
   && echo "${UNAME}:${PASS}" | chpasswd
 
-RUN chown -R "${UID}:${GID}" /var/www/html/wp-content
+# shell prompt
+RUN printf "\nPS1=\"\u@\h:\w# \"\nalias ll=\"ls -la\"" >> "${HOME}/.bashrc"
 
-FROM base as develop
+FROM base AS develop
 
 # RUN install-php-extensions xdebug
 COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
