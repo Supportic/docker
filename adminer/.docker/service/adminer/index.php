@@ -1,53 +1,83 @@
 <?php
 
-// https://github.com/TimWolla/docker-adminer/blob/master/4/index.php
-namespace docker {
-    function adminer_object() {
-        include_once './plugins/plugin.php';
+if (basename($_SERVER['DOCUMENT_URI'] ?? $_SERVER['REQUEST_URI']) === 'adminer.css' && is_readable('adminer.css')) {
+    header('Content-Type: text/css');
+    readfile('adminer.css');
+    exit;
+}
 
-        // autoloader
-        foreach (glob("plugins/*.php") as $filename) {
-            include_once "./$filename";
-        }
+final class DefaultServerPlugin {
+    public function __construct(
+        private \AdminerPlugin $adminer
+    ) {}
 
-        // https://www.adminer.org/en/extension/
-        // https://github.com/adminerevo/adminerevo/blob/main/plugins/plugin.php
-        class Adminer extends \AdminerPlugin {
-            function _callParent($function, $args) {
-                // before rendering the login form, insert default server in field
-                if ($function === 'loginForm') {
-                    ob_start();
-                    $return = \Adminer::loginForm();
-                    $form = ob_get_clean();
+    public function loginFormField(...$args) {
+        return (function (...$args) {
+            $field = \Adminer\Adminer::loginFormField(...$args);
 
-                    echo str_replace('name="auth[server]" value="" title="hostname[:port]"', 'name="auth[server]" value="'.(getenv('ADMINER_DEFAULT_SERVER') ?: 'db').'" title="hostname[:port]"', $form);
-
-                    return $return;
-                }
-
-                return parent::_callParent($function, $args);
-            }
-
-            function name() {
-                return 'Docker Adminer';
-            }
-        }
-
-        // custom plugins
-        $plugins = [];
-        foreach (glob('plugins-enabled/*.php') as $plugin) {
-            $plugins[] = require($plugin);
-        }
-
-        return new Adminer($plugins);
+            return \str_replace(
+                'name="auth[server]" value="" title="hostname[:port]"',
+                \sprintf('name="auth[server]" value="%s" title="hostname[:port]"', ($_ENV['ADMINER_DEFAULT_SERVER'] ?: 'db')),
+                $field,
+            );
+        })->call($this->adminer, ...$args);
     }
 }
 
-namespace {
-    // gets executed automatically
-    function adminer_object() {
-        return \docker\adminer_object();
+// https://www.adminer.org/plugins/#use
+function adminer_object() {
+    // required to run any plugin
+    include_once "./plugins/plugin.php";
+
+    // enable extra drivers just by including them
+    //~ include "./plugins/drivers/simpledb.php";
+
+    // autoloader
+    foreach (glob("plugins/*.php") as $filename) {
+        include_once "./$filename";
     }
 
-    include './adminer.php';
+    $plugins = [
+        /**
+         * Set supported servers
+         * @param array array(
+         *   $description => array(
+         *    "server" => $_ENV['ADMINER_DEFAULT_SERVER'],
+         *    "driver" => "server|pgsql|sqlite|..."
+         *   )
+         * )
+         */
+        new AdminerLoginServers([
+            "Docker MariaDB" => [
+                "server" => $_ENV['ADMINER_DEFAULT_SERVER'],
+                "driver" => "server",
+            ],
+        ]),
+
+        new AdminerTablesFilter(),
+
+        // https://www.tiny.cloud/docs/tinymce/6/cloud-quick-start/
+        new AdminerTinymce("https://cdn.tiny.cloud/1/no-api-key/tinymce/6.3.1-12/tinymce.min.js")
+    ];
+
+    // Load the DefaultServerPlugin last to give other plugins a chance to
+    // override loginFormField() if they wish to.
+    $plugins[] = &$loginFormPlugin;
+
+    // https://www.adminer.org/en/extension/
+    // https://github.com/vrana/adminer/blob/master/plugins/plugin.php
+    class AdminerCustomization extends \AdminerPlugin {
+        function name() {
+            return 'Docker Adminer';
+        }
+    }
+
+    $adminer = new AdminerCustomization($plugins);
+
+    $loginFormPlugin = new DefaultServerPlugin($adminer);
+
+    return $adminer;
 }
+
+// include original Adminer or Adminer Editor
+include "./adminer.php";

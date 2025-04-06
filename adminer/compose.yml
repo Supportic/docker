@@ -5,26 +5,27 @@ networks:
 
 services:
   adminer:
-    image: shyim/adminerevo:latest
-    env_file:
-      - ./.docker/service/adminer/.env
-    platform: linux/amd64
     container_name: service_adminer
+    image: adminer:latest
+    environment:
+      # https://github.com/vrana/adminer/tree/master/plugins
+      # ADMINER_PLUGINS: "tinymce tables-filter login-servers"
+      # https://github.com/vrana/adminer/tree/master/designs
+      # ADMINER_DESIGN: "nicu"
+      # ADMINER_DESIGN: "custom-theme"
+      # default server entry in the login form
+      ADMINER_DEFAULT_SERVER: "db"
     restart: unless-stopped
+    user: root
     ports:
-      - 8080:8080
+      - "8080:8080" # web ui
     volumes:
       - ./.docker/service/adminer/index.php:/var/www/html/index.php:ro
       - ./.docker/service/adminer/custom-theme:/var/www/html/designs/custom-theme:ro
-      - ./.docker/service/adminer/plugins-enabled:/var/www/html/plugins-enabled
-    environment:
-      # default server entry in the login form
-      - ADMINER_DEFAULT_SERVER=db
-      - ADMINER_DEFAULT_USER=admin
-      - ADMINER_DEFAULT_PASSWORD=admin
 
   # db:
-  #   image: mariadb:11.4.4-noble
+  #   container_name: service_db
+  #   image: mariadb:11.4
   #   platform: linux/amd64
   #   healthcheck:
   #     test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
@@ -33,9 +34,8 @@ services:
   #     interval: 5s
   #     timeout: 5s
   #     retries: 3
-  #   container_name: service_db
   #   restart: unless-stopped
   #   environment:
-  #     - MARIADB_USER=admin
-  #     - MARIADB_PASSWORD=admin
-  #     - MARIADB_ROOT_PASSWORD=root
+  #     MARIADB_USER: admin
+  #     MARIADB_PASSWORD: admin
+  #     MARIADB_ROOT_PASSWORD: root
