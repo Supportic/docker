@@ -1,0 +1,3 @@
+query-monitor
+debug-this
+wp-dummy-content-generator

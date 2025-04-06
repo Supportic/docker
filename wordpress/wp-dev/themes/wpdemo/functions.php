@@ -8,3 +8,4 @@ defined('ABSPATH') || exit;
 // if(!is_admin()){
 //   var_export("wow");
 // }
+do_action('qm/debug', 'Plugin loaded: ' . __FILE__);

@@ -1,7 +1,6 @@
 /.env
-/.db.env
 
-/wordpress/debug.log
+/wordpress/*
 
 # +----------------------------+
 # |    Keep .gitkeep files     |

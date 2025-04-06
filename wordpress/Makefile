@@ -1,42 +1,74 @@
 .SILENT:
 .ONESHELL:
 SHELL = /bin/bash
-WP_CLI_BASH = docker compose run --rm wordpress bash
-WP_CLI = docker compose run --rm wordpress wp
+MAKEFLAGS += --no-print-directory
+
+-include .env
+
+WORDPRESS_BASH_EXEC = docker compose exec wordpress bash
+WORDPRESS_BASH_RUN = docker compose run --rm wordpress bash
+WPCLI_BASH_RUN = docker compose run --rm wpcli bash
+WP_CLI_RUN = docker compose run --rm wpcli wp
 
 shell:
-	docker compose exec wordpress bash
+	$(WORDPRESS_BASH_EXEC)
 wpcli:
-	$(WP_CLI_BASH)
+	$(WPCLI_BASH_RUN)
 
 ###############################
 # docker
 ###############################
 
 start:
-	docker compose up -d db adminer mailpit wordpress
+	docker compose up -d wordpress db adminer mailpit
 stop:
 	docker compose stop
 down:
 	docker compose down
 restart: down start
-
-destroy:
+remove:
 	docker compose down -v
+	$(MAKE) delete-wordpress
 erase:
 	docker compose down -v --rmi all
+	$(MAKE) delete-wordpress
 
-install: install-image install-plugins
-rebuild: down install
+install: install-precondition install-image install-wordpress
+rebuild: remove install
+
+install-precondition:
+	@if [ ! -f .env ]; then\
+		echo "Copy and adjust values .env.sample => .env";\
+	fi
 
 install-image:
-	[ -f .env ] || cp .env.sample .env
-	[ -f .db.env ] || cp .db.env.sample .db.env
-	docker compose build wordpress
-	docker compose up -d db adminer mailpit wordpress
-	$(WP_CLI_BASH) -c "wp core install --url="http://localhost" --title=WPDemo --admin_user=admin --admin_password=admin --admin_email=admin@example.com  --locale=en_US --skip-email --quiet && wp option update timezone_string "Europe/Berlin" && wp option update time_format "H:i" && wp rewrite structure '/%postname%/' && wp language core install de_DE"
+	docker compose build wordpress wpcli
+	$(MAKE) start
 	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") 2> /dev/null || true
 
-install-plugins:
-	$(WP_CLI) plugin uninstall akismet hello
-	$(WP_CLI) plugin install query-monitor wp-dummy-content-generator --activate
+install-wordpress:
+# make sure the entrypoint-script reruns which copys files into /var/www/html
+	@if [ ! -f "wordpress/index.php" ]; then \
+			docker compose restart wordpress; \
+	fi;
+	@echo "Installing WordPress..."
+	$(WPCLI_BASH_RUN) -c "setup-wordpress.sh"
+	$(MAKE) symlink-docker-create
+	@echo "WordPress installation complete."
+delete-wordpress:
+	$(MAKE) symlink-docker-remove
+	@echo "Deleting WordPress files..."
+	@find wordpress -maxdepth 1 -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} +
+	@echo "WordPress files deleted."
+
+log:
+	$(WORDPRESS_BASH_RUN) -c "tail -f -n 30 wp-content/debug.log"
+
+symlink-docker-create:
+	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-create"
+symlink-docker-remove:
+	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-remove"
+symlink-docker-remove-broken:
+	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-remove-broken"
+symlink-docker-recreate:
+	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-recreate"

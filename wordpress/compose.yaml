@@ -1,6 +1,6 @@
 volumes:
   db_data:
-  wordpress_data:
+  wp_data:
 networks:
   default:
     name: ${PROJECT_NAME}-network
@@ -9,50 +9,72 @@ networks:
 
 services:
   ########################
-  # Wordpress & Web Server
+  # Wordpress & Apache Web Server
   ########################
   wordpress:
-    image: ${PROJECT_NAME}/wordpress:0.0.1
     container_name: ${PROJECT_NAME}-wordpress
+    image: ${PROJECT_NAME}/wordpress:0.0.1
     build:
       context: ./.docker/service/wordpress
       args:
-          # apache only, php-fpm requires extra webserver
-        - WP_VER=6.7.2-php8.3-apache
-        - WPCLI_VER=cli-php8.3
         - UID=${UID}
         - GID=${GID}
         - UNAME=${UNAME}
         - GNAME=${GNAME}
         - PASS=${PASS}
       target: develop
-    healthcheck:
-      test: curl --fail http://localhost || exit 1
-      start_period: 10s
-      interval: 10s
-      timeout: 5s
-      retries: 3
     working_dir: /var/www/html
     ports:
       - ${WORDPRESS_PORT_HOST:-80}:80
     restart: unless-stopped
     init: true
     user: ${UID:-1000}
+    healthcheck:
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     volumes:
-      - wordpress_data:/var/www/html
-      - ./.docker/service/wordpress/php.ini:/usr/local/etc/php/conf.d/php.ini
-      - ./.docker/service/wordpress/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini
-      - ./.docker/service/wordpress/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
-      - ./wordpress/debug.log:/var/www/html/wp-content/debug.log
-      - ./wordpress/themes/wpdemo:/var/www/html/wp-content/themes/wpdemo
-      - ./wordpress/plugins/wpdemo:/var/www/html/wp-content/plugins/wpdemo
-      - ./wordpress/mu-plugins/wpdemo:/var/www/html/wp-content/mu-plugins/wpdemo
-      - ./wordpress/mu-plugins/load.php:/var/www/html/wp-content/mu-plugins/load.php
+      - ./wordpress:/var/www/html
+      - ./wp-dev:/home/$UNAME/wp-dev:ro
+      - ./symlink.Makefile:/home/$UNAME/Makefile:ro
     env_file:
-      - .db.env
       - .wordpress.env
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
+      WORDPRESS_DB_USER: ${DB_USER:-admin}
+      WORDPRESS_DB_PASSWORD: ${DB_PW:-password}
+      WORDPRESS_TABLE_PREFIX: wp_
+      WORDPRESS_DEBUG: 1
     depends_on:
-      # wait until DB is ready
+      db:
+        condition: service_healthy
+
+  wpcli:
+    container_name: ${PROJECT_NAME}-wpcli
+    image: ${PROJECT_NAME}/wpcli:0.0.1
+    user: ${UID:-1000}
+    build:
+      context: ./.docker/service/wpcli
+      args:
+        - UID=${UID}
+        - GID=${GID}
+        - UNAME=${UNAME}
+        - GNAME=${GNAME}
+        - PASS=${PASS}
+    init: true
+    # make curl localhost possible
+    network_mode: "service:wordpress"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
+      WORDPRESS_DB_USER: ${DB_USER:-admin}
+      WORDPRESS_DB_PASSWORD: ${DB_PW:-password}
+    # mirrors filesystem of the listed services
+    volumes_from:
+      - wordpress
+    depends_on:
       db:
         condition: service_healthy
 
@@ -60,18 +82,21 @@ services:
   # Database
   ########################
   db:
-    image: mariadb:11.3-jammy
     container_name: ${PROJECT_NAME}-db
+    image: mariadb:11.4
     user: mysql
     restart: unless-stopped
-    env_file:
-      - .db.env
     healthcheck:
       test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
       start_period: 10s
       interval: 10s
       timeout: 5s
       retries: 3
+    environment:
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASS}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOTPASS}
     volumes:
       - db_data:/var/lib/mysql
       - ./.docker/service/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
@@ -80,8 +105,8 @@ services:
   # Database UI
   ########################
   adminer:
-    image: adminer:latest
     container_name: ${PROJECT_NAME}-adminer
+    image: adminer:latest
     restart: unless-stopped
     env_file:
       - .adminer.env
@@ -92,8 +117,8 @@ services:
   # Email Catcher
   #######################
   mailpit:
-    image: axllent/mailpit:latest
     container_name: ${PROJECT_NAME}-mailpit
+    image: axllent/mailpit:latest
     restart: unless-stopped
     logging:
       driver: none # disable saving logs

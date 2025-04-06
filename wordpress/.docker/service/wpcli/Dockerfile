@@ -1,5 +1,5 @@
-ARG WPCLI_VER=cli
-FROM wordpress:${WPCLI_VER}
+# always alpine
+FROM wordpress:cli-2-php8.3
 LABEL autodelete="true"
 
 USER root
@@ -11,7 +11,7 @@ ARG UID=1000
 ARG GID=${UID}
 ARG UNAME=docker
 ARG GNAME=${UNAME}
-ARG PASS=test
+ARG PASS=password
 
 ENV USER=${UNAME}
 
@@ -22,8 +22,11 @@ RUN set -ex \
   && adduser -D --gecos "" --ingroup "${GNAME}" --shell /bin/bash --uid "${UID}" "${UNAME}" \
   # add user to group
   # && addgroup "${UNAME}" www-data \
+  # shell prompt
+  && printf "\nPS1=\"\\\u@\\\h:\\\w# \"\nalias ll=\"ls -la\"" >> "/home/${UNAME}/.bashrc" \
   # set user PW
   && echo "${UNAME}:${PASS}" | chpasswd
 
-# shell prompt
-RUN printf "\nPS1=\"\u@\h:\w# \"\nalias ll=\"ls -la\"" >> "${HOME}/.bashrc"
+COPY plugins.txt /plugins.txt
+COPY themes.txt /themes.txt
+COPY --chown=${UID}:${GID} --chmod=0755 setup-wordpress.sh /usr/local/bin/
