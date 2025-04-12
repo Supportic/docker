@@ -25,10 +25,8 @@ if ! wp core is-installed; then
       wp language core install de_DE
   fi
 
-  # delete existing pages and posts
-  wp post delete --force $(wp post list --post_type='page,post' --format=ids)
-  # delete existing comments
-  wp comment delete --force $(wp comment list --format=ids)
+  # delete existing pages and posts (and connected comments)
+  wp post delete $(wp post list --post_type='page,post' --format=ids) --force
 
   wp theme delete --all
   wp plugin uninstall --all
