@@ -4,8 +4,8 @@ Copy `.env.sample` -> `.env` and adjust variables.
 
 Frontend: http://localhost  
 Backend: http://localhost/wp-admin  
-Adminer: http://localhost/8080  
-Mailpit: http://localhost/8025
+Adminer: http://localhost:8080  
+Mailpit: http://localhost:8025
 
 **install**  
 `make install`
@@ -27,13 +27,6 @@ Mailpit: http://localhost/8025
 
 **remove everything**  
 `make erase`
-
-## TODO
-
-- when removing the environment it will still start the DB because wpcli depends on that service
-  - add --no-deps flag to the command to avoid that
-  - make wpcli not dependend on the services by putting the installation inside a volume (wp_data) and reference the volume instead
-- transform the symlink.Makefile into a script located under /usr/local/bin
 
 ## Info
 
