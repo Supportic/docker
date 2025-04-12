@@ -6,26 +6,29 @@ if (basename($_SERVER['DOCUMENT_URI'] ?? $_SERVER['REQUEST_URI']) === 'adminer.c
     exit;
 }
 
-final class DefaultServerPlugin {
+
+// class to work on the adminer object
+final class DefaultServerPlugin
+{
     public function __construct(
         private \AdminerPlugin $adminer
     ) {}
 
-    public function loginFormField(...$args) {
+    public function loginFormField(...$args)
+    {
         return (function (...$args) {
-            $field = \Adminer\Adminer::loginFormField(...$args);
+            $field = Adminer\Adminer::loginFormField(...$args);
 
-            return \str_replace(
-                'name="auth[server]" value="" title="hostname[:port]"',
-                \sprintf('name="auth[server]" value="%s" title="hostname[:port]"', ($_ENV['ADMINER_DEFAULT_SERVER'] ?: 'db')),
-                $field,
-            );
+            // modify the login form field
+
+            return $field;
         })->call($this->adminer, ...$args);
     }
 }
 
 // https://www.adminer.org/plugins/#use
-function adminer_object() {
+function adminer_object()
+{
     // required to run any plugin
     include_once "./plugins/plugin.php";
 
@@ -57,7 +60,7 @@ function adminer_object() {
         new AdminerTablesFilter(),
 
         // https://www.tiny.cloud/docs/tinymce/6/cloud-quick-start/
-        new AdminerTinymce("https://cdn.tiny.cloud/1/no-api-key/tinymce/6.3.1-12/tinymce.min.js")
+        new AdminerTinymce("https://cdn.tiny.cloud/1/no-api-key/tinymce/6.3.1-12/tinymce.min.js"),
     ];
 
     // Load the DefaultServerPlugin last to give other plugins a chance to
@@ -66,8 +69,10 @@ function adminer_object() {
 
     // https://www.adminer.org/en/extension/
     // https://github.com/vrana/adminer/blob/master/plugins/plugin.php
-    class AdminerCustomization extends \AdminerPlugin {
-        function name() {
+    class AdminerCustomization extends \AdminerPlugin
+    {
+        function name()
+        {
             return 'Docker Adminer';
         }
     }

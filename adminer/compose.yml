@@ -1,7 +1,6 @@
 networks:
   default:
     name: service
-    external: true
 
 services:
   adminer:
@@ -26,7 +25,6 @@ services:
   # db:
   #   container_name: service_db
   #   image: mariadb:11.4
-  #   platform: linux/amd64
   #   healthcheck:
   #     test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
   #     start_period: 5s
