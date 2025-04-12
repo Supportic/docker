@@ -37,6 +37,7 @@ rebuild: remove install
 install-precondition:
 	@if [ ! -f .env ]; then\
 		echo "Copy and adjust values .env.sample => .env";\
+		exit 1;\
 	fi
 
 install-image:
