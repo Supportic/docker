@@ -37,7 +37,6 @@ services:
     volumes:
       - ./wordpress:/var/www/html
       - ./wp-dev:/home/$UNAME/wp-dev:ro
-      - ./symlink.Makefile:/home/$UNAME/Makefile:ro
     env_file:
       - .wordpress.env
     environment:

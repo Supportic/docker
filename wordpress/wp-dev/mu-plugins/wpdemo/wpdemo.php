@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @package WPDemo Must Use Plugin
- */
-
-
 /*
  * Plugin Name: WPDemo Must Use Plugin
  * Description: Demo Must Use Plugin
@@ -16,12 +11,10 @@
  * Requires Plugins: query-monitor
 */
 
-
 declare(strict_types=1);
 
 // Exit if accessed directly outside wordpress context.
 defined('ABSPATH') || exit;
-
 
 if (!function_exists('qof_remove_admin_bar_nodes')){
     function qof_remove_admin_bar_nodes() {
@@ -32,7 +25,7 @@ if (!function_exists('qof_remove_admin_bar_nodes')){
     add_action( 'admin_bar_menu', 'qof_remove_admin_bar_nodes', PHP_INT_MAX );
 }
 
-// hide the meta tag generator from head and rss
+// hide the meta tag generator from head
 add_filter( 'the_generator', '__return_false' );
 remove_action( 'wp_head', 'wp_generator' );
 

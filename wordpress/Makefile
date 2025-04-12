@@ -3,8 +3,6 @@
 SHELL = /bin/bash
 MAKEFLAGS += --no-print-directory
 
--include .env
-
 WORDPRESS_BASH_EXEC = docker compose exec wordpress bash
 WORDPRESS_BASH_RUN = docker compose run --rm wordpress bash
 WPCLI_BASH_RUN = docker compose run --rm wpcli bash
@@ -27,11 +25,11 @@ down:
 	docker compose down
 restart: down start
 remove:
+	$(MAKE) delete-wordpress
 	docker compose down -v
-	$(MAKE) delete-wordpress
 erase:
-	docker compose down -v --rmi all
 	$(MAKE) delete-wordpress
+	docker compose down -v --rmi all
 
 install: install-precondition install-image install-wordpress
 rebuild: remove install
@@ -42,7 +40,7 @@ install-precondition:
 	fi
 
 install-image:
-	docker compose build wordpress wpcli
+	docker compose build --pull wordpress wpcli
 	$(MAKE) start
 	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") 2> /dev/null || true
 
@@ -52,7 +50,7 @@ install-wordpress:
 			docker compose restart wordpress; \
 	fi;
 	@echo "Installing WordPress..."
-	$(WPCLI_BASH_RUN) -c "setup-wordpress.sh"
+	$(WPCLI_BASH_RUN) -c "setup-wordpress"
 	$(MAKE) symlink-docker-create
 	@echo "WordPress installation complete."
 delete-wordpress:
@@ -65,10 +63,10 @@ log:
 	$(WORDPRESS_BASH_RUN) -c "tail -f -n 30 wp-content/debug.log"
 
 symlink-docker-create:
-	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-create"
+	$(WORDPRESS_BASH_RUN) -c 'symlink create'
 symlink-docker-remove:
-	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-remove"
+	$(WORDPRESS_BASH_RUN) -c 'symlink remove'
 symlink-docker-remove-broken:
-	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-remove-broken"
+	$(WORDPRESS_BASH_RUN) -c 'symlink remove-broken'
 symlink-docker-recreate:
-	docker compose run --rm -w /home/$(UNAME) wordpress bash -c "make symlink-docker-recreate"
+	$(WORDPRESS_BASH_RUN) -c 'symlink recreate'

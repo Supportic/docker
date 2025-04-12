@@ -38,7 +38,7 @@ if wp core is-installed; then
 
   # wp theme update --all
 
-  for theme in $(cat /themes.txt); do
+  for theme in $(cat /install-themes.txt); do
     if ! wp theme is-installed "$theme"; then
       wp theme install "$theme" --activate
     else
@@ -52,7 +52,7 @@ if wp core is-installed; then
 
   # wp plugin install --activate $(cat /plugins.txt)
 
-  for plugin in $(cat /plugins.txt); do
+  for plugin in $(cat /install-plugins.txt); do
     if ! wp plugin is-installed "$plugin"; then
       wp plugin install "$plugin" --activate
     else

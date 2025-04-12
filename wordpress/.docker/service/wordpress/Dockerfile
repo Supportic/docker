@@ -19,11 +19,11 @@ RUN a2enmod $APACHE_MODULES
 #   && find /usr/src/wordpress/wp-content/themes -maxdepth 1 -mindepth 1 ! -name 'index.php' -exec rm -rf {} +
 
 ## /usr/local/etc/php/conf.d/php.ini
-COPY php.ini "$PHP_INI_DIR/conf.d/php.ini"
-COPY uploads.ini "$PHP_INI_DIR/conf.d/uploads.ini"
+COPY configs/php.ini "$PHP_INI_DIR/conf.d/php.ini"
+COPY configs/uploads.ini "$PHP_INI_DIR/conf.d/uploads.ini"
 
 ## enable opcache when needed, only the existance of the file will enable opcache, even if the config says enable=0
-# COPY opcache.ini "$PHP_INI_DIR/conf.d/opcache.ini"
+# COPY configs/opcache.ini "$PHP_INI_DIR/conf.d/opcache.ini"
 
 # COPY custom.ini $PHP_INI_DIR/conf.d/
 # Use the default production configuration
@@ -56,6 +56,8 @@ RUN set -ex \
   && printf "\nPS1=\"\\\u@\\\h:\\\w# \"\nalias ll=\"ls -la\"" >> "/home/${UNAME}/.bashrc" \
   && chown "${UNAME}:${GNAME}" "/home/${UNAME}/.bashrc"
 
+COPY --chown=${UID}:${GID} --chmod=0755 symlink.sh /usr/local/bin/symlink
+
 # install Composer
 # RUN curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 # COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -70,7 +72,7 @@ FROM base AS develop
 LABEL autodelete="true"
 
 # RUN install-php-extensions xdebug
-COPY xdebug.ini "$PHP_INI_DIR/conf.d/xdebug.ini"
+COPY configs/xdebug.ini "$PHP_INI_DIR/conf.d/xdebug.ini"
 
 ## allow root command without sudo
 # RUN usermod -aG sudo ${UNAME}

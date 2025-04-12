@@ -1,3 +1,7 @@
+####################################################################
+# This file got converted and immproved into a script -> symlink.sh
+####################################################################
+
 .SILENT:
 .ONESHELL:
 SHELL = /bin/bash

@@ -27,6 +27,6 @@ RUN set -ex \
   # set user PW
   && echo "${UNAME}:${PASS}" | chpasswd
 
-COPY plugins.txt /plugins.txt
-COPY themes.txt /themes.txt
-COPY --chown=${UID}:${GID} --chmod=0755 setup-wordpress.sh /usr/local/bin/
+COPY install-plugins.txt /install-plugins.txt
+COPY install-themes.txt /install-themes.txt
+COPY --chown=${UID}:${GID} --chmod=0755 setup-wordpress.sh /usr/local/bin/setup-wordpress

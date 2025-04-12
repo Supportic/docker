@@ -28,6 +28,13 @@ Mailpit: http://localhost/8025
 **remove everything**  
 `make erase`
 
+## TODO
+
+- when removing the environment it will still start the DB because wpcli depends on that service
+  - add --no-deps flag to the command to avoid that
+  - make wpcli not dependend on the services by putting the installation inside a volume (wp_data) and reference the volume instead
+- transform the symlink.Makefile into a script located under /usr/local/bin
+
 ## Info
 
 WordPress options: https://codex.wordpress.org/Option_Reference
