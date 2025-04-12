@@ -25,7 +25,7 @@ services:
       target: develop
     working_dir: /var/www/html
     ports:
-      - ${WORDPRESS_PORT_HOST:-80}:80
+      - "${WORDPRESS_PORT_HOST:-80}:80"
     restart: unless-stopped
     init: true
     user: ${UID:-1000}
@@ -107,11 +107,18 @@ services:
   adminer:
     container_name: ${PROJECT_NAME}-adminer
     image: adminer:latest
+    environment:
+      # https://github.com/vrana/adminer/tree/master/plugins
+      # ADMINER_PLUGINS: "tinymce tables-filter login-servers"
+      # https://github.com/vrana/adminer/tree/master/designs
+      # ADMINER_DESIGN: "nicu"
+      # default server entry in the login form
+      ADMINER_DEFAULT_SERVER: "db"
     restart: unless-stopped
-    env_file:
-      - .adminer.env
     ports:
-      - ${ADMINER_PORT_HOST:-8080}:8080
+      - "${ADMINER_PORT_HOST:-8080}:8080" # web ui
+    volumes:
+      - ./.docker/service/adminer/index.php:/var/www/html/index.php:ro
 
   ########################
   # Email Catcher
@@ -124,6 +131,6 @@ services:
       driver: none # disable saving logs
     ports:
       - 1025:1025 # smtp server
-      - ${MAILPIT_PORT_HOST:-8025}:8025 # web ui
+      - "${MAILPIT_PORT_HOST:-8025}:8025" # web ui
     environment:
       TZ: Europe/Berlin
