@@ -4,15 +4,19 @@ set -Eeuo pipefail
 
 # echo "Running as: $(id -un)"
 
-if ! wp core is-installed; then
+language_packs="de_DE"
+url="http://localhost"
+
+# add url before command because env HTTP_HOST is not set yet
+if ! wp --url="$url" core is-installed; then
   echo >&2 "Installing WordPress"
 
   wp core install \
-    --url=http://localhost \
+    --url="$url" \
     --title=WPDemo \
     --admin_user=admin \
     --admin_password=admin \
-    --admin_email=admin@example.com \
+    --admin_email=admin@wpdemo.com \
     --locale=en_US \
     --skip-email \
     --quiet
@@ -20,10 +24,7 @@ if ! wp core is-installed; then
   wp option update time_format "H:i"
   wp option update date_format "d.m.Y"
   wp rewrite structure '/%postname%/'
-
-  if ! wp language core is-installed de_DE; then
-      wp language core install de_DE
-  fi
+  wp language core install "$language_packs" > /dev/null 2>&1
 
   # delete existing pages and posts (and connected comments)
   wp post delete $(wp post list --post_type='page,post' --format=ids) --force
@@ -33,7 +34,7 @@ if ! wp core is-installed; then
   # wp plugin delete --all
 fi
 
-if wp core is-installed; then
+if wp --url="$url" core is-installed; then
   echo >&2 "Preparing Themes"
 
   # wp theme update --all
@@ -44,10 +45,14 @@ if wp core is-installed; then
     else
       wp theme update "$theme"
     fi
+    wp language theme install "$theme" "$language_packs" > /dev/null 2>&1
   done
+
+  echo >&2 "Updating Theme Translations"
+  wp language theme update --all
 fi
 
-if wp core is-installed; then
+if wp --url="$url" core is-installed; then
   echo >&2 "Preparing Plugins"
 
   # wp plugin install --activate $(cat /plugins.txt)
@@ -58,7 +63,26 @@ if wp core is-installed; then
     else
       wp plugin update "$plugin"
     fi
+    wp language plugin install "$plugin" "$language_packs" > /dev/null 2>&1
   done
+
+  echo >&2 "Updating Plugin Translations"
+  wp language plugin update --all
+
+  echo >&2 "Configuring Plugins"
+
+  # wp-content/w3tc-config/master.php
+  if wp plugin is-installed w3-total-cache && [ "$(wp w3tc option get objectcache.engine)" != "memcached" ]; then
+    wp w3tc option set pgcache.enabled 0 --type=boolean
+
+    wp w3tc option set dbcache.enabled 1 --type=boolean
+    wp w3tc option set dbcache.engine memcached
+    wp w3tc option set dbcache.memcached.servers memcached:11211 --type=array
+
+    wp w3tc option set objectcache.enabled 1 --type=boolean
+    wp w3tc option set objectcache.engine memcached
+    wp w3tc option set objectcache.memcached.servers memcached:11211 --type=array
+  fi
 fi
 
 # for apache2-foreground

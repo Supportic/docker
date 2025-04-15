@@ -52,6 +52,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      memcached:
+        condition: service_started
 
   wpcli:
     container_name: ${PROJECT_NAME}-wpcli
@@ -102,6 +104,17 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./.docker/service/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+
+  memcached:
+    image: memcached:alpine
+    container_name: ${PROJECT_NAME}-memcached
+    restart: unless-stopped
+    expose:
+      - 11211
+    command:
+      - --conn-limit=1024
+      - --memory-limit=64
+      - --threads=4
 
   ########################
   # Database UI

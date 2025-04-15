@@ -16,7 +16,7 @@ License:      MIT License
 // Exit if accessed directly outside wordpress context.
 defined('ABSPATH') || exit;
 
-if (!function_exists('qof_remove_admin_bar_nodes')){
+if (!function_exists('qof_remove_admin_bar_nodes')) {
     function qof_remove_admin_bar_nodes() {
         // Hide WP Logo from the admin bar
         global $wp_admin_bar;
@@ -39,7 +39,7 @@ remove_action( 'wp_head', 'wp_generator' );
 
 
 if (!function_exists('action_plugins_loaded')){
-  add_action('plugins_loaded', 'action_plugins_loaded' );
+    add_action('plugins_loaded', 'action_plugins_loaded' );
 
     /**
      * Fires once activated plugins have loaded.

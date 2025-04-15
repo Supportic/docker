@@ -18,7 +18,7 @@ wpcli:
 ###############################
 
 start:
-	docker compose up -d wordpress db adminer mailpit
+	docker compose up -d wordpress db memcached adminer mailpit
 stop:
 	docker compose stop
 down:
@@ -46,10 +46,6 @@ install-image:
 	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") 2> /dev/null || true
 
 install-wordpress:
-# make sure the entrypoint-script reruns which copys files into /var/www/html
-	@if [ ! -f "wordpress/index.php" ]; then \
-			docker compose restart wordpress; \
-	fi;
 	@echo "Installing WordPress..."
 	$(WPCLI_BASH_RUN) -c "setup-wordpress"
 	$(MAKE) symlink-docker-create
