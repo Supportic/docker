@@ -65,8 +65,8 @@ COPY --chown=${UID}:${GID} --chmod=0755 symlink.sh /usr/local/bin/symlink
 # install PHP extensions
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-# https://make.wordpress.org/hosting/handbook/server-environment/
-RUN install-php-extensions opcache igbinary
+# https://make.wordpress.org/hosting/handbook/server-environment/#php-extensions
+RUN install-php-extensions opcache igbinary timezonedb
 
 FROM base AS develop
 LABEL autodelete="true"
@@ -77,7 +77,7 @@ COPY configs/xdebug.ini "$PHP_INI_DIR/conf.d/xdebug.ini"
 ## allow root command without sudo
 # RUN usermod -aG sudo ${UNAME}
 
-RUN install-php-extensions xdebug
+RUN install-php-extensions xdebug memcached redis
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
   CMD curl --fail http://localhost || exit 1

@@ -3,18 +3,18 @@
 set -Eeuo pipefail
 # set -x
 
-DEV_DIR="${HOME}/wp-dev" # adjust
-WORDPRESS_DIR="/var/www/html" # adjust
+# Configuration
+DEV_DIR="${DEV_DIR:-${HOME}/wp-dev}" # Adjust default when needed
+DEV_DIR="${DEV_DIR%/}" # Remove trailing slash
 
-DEV_DIR_NAME=$(basename "$DEV_DIR")
-WP_CONTENT_DIR="${WORDPRESS_DIR}/wp-content"
+WP_ROOT_DIR="${WORDPRESS_DIR:-/var/www/html}" # Adjust default when needed
+WP_ROOT_DIR="${WP_ROOT_DIR%/}" # Remove trailing slash
+
+WP_CONTENT_DIR="${WP_ROOT_DIR}/wp-content"
 
 # 0 = true, 1 = false
 function dir_exists() {
   [ -d "$1" ] && return 0 || return 1
-}
-function file_exists() {
-  [ -f "$1" ] && return 0 || return 1
 }
 function dev_dir_exists() {
   if ! dir_exists "$DEV_DIR"; then
@@ -32,6 +32,8 @@ function trim() {
     var="${var%"${var##*[![:space:]]}"}"
     printf '%s' "$var"
 }
+
+# @param $1 directories to look in, separated by space
 function find_dirs(){
   local DIRS=""
   for DIR in "$@"; do
@@ -40,20 +42,22 @@ function find_dirs(){
     fi
   done
 
-  echo $(trim "$DIRS")
+  trim "$DIRS"
 }
-function find_files(){
+
+# @param $1 directories to look in, separated by space
+function find_files() {
   local FILES=""
   for DIR in "$@"; do
     if dir_exists "$DEV_DIR/$DIR"; then
-      FILES+=$(find "$DEV_DIR/$DIR" -maxdepth 1 -type f)" "
+      FILES+=$(find "$DEV_DIR/$DIR" -maxdepth 1 -type f ! -name ".gitkeep" ! -name ".gitignore")" "
     fi
   done
 
-  echo $(trim "$FILES")
+  trim "$FILES"
 }
 
-function create_user(){
+function create_user() {
   dev_dir_exists || exit 1;
 
   local SYNC_DIRS SYNC_FILES COMBINED_LIST ALLOWED_DIRS
@@ -67,12 +71,15 @@ function create_user(){
   ALLOWED_DIRS="mu-plugins plugins"
   SYNC_FILES=$(find_files $ALLOWED_DIRS)
 
-  COMBINED_LIST=$(echo "$SYNC_DIRS $SYNC_FILES")
+  COMBINED_LIST="$SYNC_DIRS $SYNC_FILES"
 
 	echo "Symlinking files and directories of user from ${DEV_DIR} to ${WP_CONTENT_DIR}"
 
   for SRC_ITEM_PATH in $COMBINED_LIST; do
-    WP_DIR_TYPE=$(echo "$SRC_ITEM_PATH" | sed "s|.*/${DEV_DIR_NAME}/\([^/]*\)/.*|\1|")
+    # themes, plugins or mu-plugins
+    WP_DIR_TYPE=${SRC_ITEM_PATH#"${DEV_DIR}/"}
+    WP_DIR_TYPE=${WP_DIR_TYPE%%/*}
+
     SRC_ITEM_NAME=$(basename "$SRC_ITEM_PATH")
 
     if [ ! -d "$WP_CONTENT_DIR/$WP_DIR_TYPE" ]; then
@@ -93,7 +100,7 @@ function create_user(){
   echo "Symlinking complete."
 }
 
-function remove_user(){
+function remove_user() {
   dev_dir_exists || exit 1;
 
   local SYNC_DIRS SYNC_FILES COMBINED_LIST ALLOWED_DIRS WP_DIR_TYPE SRC_ITEM_NAME TARGET_PATH
@@ -104,12 +111,15 @@ function remove_user(){
   ALLOWED_DIRS="mu-plugins plugins"
   SYNC_FILES=$(find_files $ALLOWED_DIRS)
 
-  COMBINED_LIST=$(echo "$SYNC_DIRS $SYNC_FILES")
+  COMBINED_LIST="$SYNC_DIRS $SYNC_FILES"
 
   echo "Removing symlinks of user in $WP_CONTENT_DIR"
 
   for SRC_ITEM_PATH in $COMBINED_LIST; do
-    WP_DIR_TYPE=$(echo "$SRC_ITEM_PATH" | sed "s|.*/${DEV_DIR_NAME}/\([^/]*\)/.*|\1|")
+    # themes, plugins or mu-plugins
+    WP_DIR_TYPE=${SRC_ITEM_PATH#"${DEV_DIR}/"}
+    WP_DIR_TYPE=${WP_DIR_TYPE%%/*}
+
     SRC_ITEM_NAME=$(basename "$SRC_ITEM_PATH")
     TARGET_PATH="$WP_CONTENT_DIR/$WP_DIR_TYPE/$SRC_ITEM_NAME"
 
@@ -125,27 +135,28 @@ function remove_user(){
   echo "Removing symlinks complete."
 }
 
-function remove_broken(){
-  local BROKEN_LINKS TRIMMED_LINK
+function remove_broken() {
+  local BROKEN_LINKS
 
   # Find all broken symlinks in WP_CONTENT_DIR
-  BROKEN_LINKS=$(find "$WP_CONTENT_DIR" -xtype l -exec ls -l {} + | awk '{print $NF}')
+  # symlinks not coming from inside the container are also captured here
+  BROKEN_LINKS=$(find "$WP_CONTENT_DIR" -xtype l)
 
   echo "Removing broken symlinks in $WP_CONTENT_DIR"
 
   # Iterate over each broken symlink
   for BROKEN_LINK in $BROKEN_LINKS; do
-    # Skip symlinks that were not created locally
-    if [[ "$BROKEN_LINK" != "$WORDPRESS_DIR"* ]]; then
+    # Normalize the path to remove ../ from the path
+    BROKEN_LINK_REALPATH=$(realpath -m "$BROKEN_LINK")
+
+    # Skip symlinks that were not created inside the container (starts with DEV_DIR) The user might symlink items into the wordpress directory on his own locally, ignore those symlinks
+    if [[ "$BROKEN_LINK_REALPATH" != "$DEV_DIR"* ]]; then
       continue
     fi
 
-    # Trim the path to remove the DEV_DIR prefix
-    TRIMMED_LINK=$(echo "$BROKEN_LINK" | sed "s|.*$DEV_DIR/||")
-
     # Remove the broken symlink
-    echo "  Removing broken symlink $WP_CONTENT_DIR/$TRIMMED_LINK"
-    unlink "$WP_CONTENT_DIR/$TRIMMED_LINK"
+    echo "  Removing broken symlink $BROKEN_LINK"
+    unlink "$BROKEN_LINK"
   done
 
   echo "Removing broken symlinks complete."
@@ -153,11 +164,11 @@ function remove_broken(){
 
 function main() {
   local programname usage
-  programname=$(basename ${0})
+  programname=$(basename "${0}")
   usage="Usage: ${programname} <create|remove|remove-broken|recreate>"
 
   # check whether user had supplied -h or --help
-  if [[ "$@" == "--help" || "$@" == "-h" ]]; then
+  if [[ "$*" == "--help" || "$*" == "-h" ]]; then
     printf "This script creates, removes or receates symlinks between the wordpress installation and development directory of themes, plugins and mu-plugins.\n\n"
     exit 0
   elif [ $# == 0 ] || [ -z "$1" ]; then
@@ -165,7 +176,6 @@ function main() {
     echo "${usage}"
     exit 1
   fi
-
 
   case "$1" in
 
@@ -189,7 +199,7 @@ function main() {
       ;;
 
     *)
-      printf "Invalid argument: ${1}\n\n"
+      printf "Invalid argument: %s\n\n" "${1}"
       echo "${usage}"
       exit 22
       ;;
@@ -198,6 +208,6 @@ function main() {
   exit 0
 }
 
-args="${@:-}"
+args=("${@:-}")
 
-main ${args}
+main "${args[@]}"

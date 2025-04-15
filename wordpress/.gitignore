@@ -1,6 +1,8 @@
 /.env
 
 /wordpress/*
+/wp-dev/themes/*
+/wp-dev/plugins/*
 
 # +----------------------------+
 # |    Keep .gitkeep files     |
