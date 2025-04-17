@@ -71,13 +71,13 @@ RUN install-php-extensions opcache igbinary timezonedb
 FROM base AS develop
 LABEL autodelete="true"
 
-# RUN install-php-extensions xdebug
-COPY configs/xdebug.ini "$PHP_INI_DIR/conf.d/xdebug.ini"
-
 ## allow root command without sudo
 # RUN usermod -aG sudo ${UNAME}
 
-RUN install-php-extensions xdebug memcached redis
+# first install xdebug which sets zend_extension=xdebug.so automatically for you
+RUN install-php-extensions xdebug-3.4.2 memcached
+
+COPY configs/xdebug.ini "$PHP_INI_DIR/conf.d/xdebug.ini"
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
   CMD curl --fail http://localhost || exit 1
