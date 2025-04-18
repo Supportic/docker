@@ -43,7 +43,7 @@ install-precondition:
 install-image:
 	docker compose build --pull wordpress wpcli
 	$(MAKE) start
-	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") 2> /dev/null || true
+	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") > /dev/null 2> &1 || true
 
 install-wordpress:
 	@echo "Installing WordPress..."

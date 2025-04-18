@@ -41,9 +41,9 @@ services:
       - .wordpress.env
     environment:
       WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
-      WORDPRESS_DB_USER: ${DB_USER:-admin}
-      WORDPRESS_DB_PASSWORD: ${DB_PW:-password}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASS}
       WORDPRESS_TABLE_PREFIX: wp_
       WORDPRESS_DEBUG: 1
       # for symlink.sh, absolute paths only
@@ -72,9 +72,9 @@ services:
     network_mode: "service:wordpress"
     environment:
       WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
-      WORDPRESS_DB_USER: ${DB_USER:-admin}
-      WORDPRESS_DB_PASSWORD: ${DB_PW:-password}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASS}
     # mirrors filesystem of the listed services
     volumes_from:
       - wordpress

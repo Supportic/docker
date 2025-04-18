@@ -79,5 +79,23 @@ RUN install-php-extensions xdebug-3.4.2 memcached
 
 COPY configs/xdebug.ini "$PHP_INI_DIR/conf.d/xdebug.ini"
 
+RUN set -ex \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends \
+  sudo \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+## allow user to use sudo commands
+RUN set -ex \
+  && echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} \
+  && chmod 0440 /etc/sudoers.d/${UNAME}
+# RUN usermod -aG sudo ${UNAME}
+
+## allow user to use sudo commands without password
+# RUN set -ex \
+#   && echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} \
+#   && chmod 0440 /etc/sudoers.d/${UNAME}
+
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
   CMD curl --fail http://localhost || exit 1
