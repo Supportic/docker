@@ -75,7 +75,7 @@ LABEL autodelete="true"
 # RUN usermod -aG sudo ${UNAME}
 
 # first install xdebug which sets zend_extension=xdebug.so automatically for you
-RUN install-php-extensions xdebug-3.4.2 memcached
+RUN install-php-extensions xdebug memcached
 
 COPY configs/xdebug.ini "$PHP_INI_DIR/conf.d/xdebug.ini"
 
