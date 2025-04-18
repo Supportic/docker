@@ -88,7 +88,7 @@ RUN set -ex \
 
 ## allow user to use sudo commands
 RUN set -ex \
-  && echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} \
+  && echo "${UNAME} ALL=(ALL) ALL" > /etc/sudoers.d/${UNAME} \
   && chmod 0440 /etc/sudoers.d/${UNAME}
 # RUN usermod -aG sudo ${UNAME}
 
