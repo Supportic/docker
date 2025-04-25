@@ -96,6 +96,3 @@ RUN set -ex \
 # RUN set -ex \
 #   && echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} \
 #   && chmod 0440 /etc/sudoers.d/${UNAME}
-
-HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl --fail http://localhost || exit 1

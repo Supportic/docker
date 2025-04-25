@@ -5,7 +5,7 @@ set -Eeuo pipefail
 # echo "Running as: $(id -un)"
 
 language_packs="de_DE"
-url="http://localhost"
+url="http://localhost:${WORDPRESS_PORT_HOST:-80}"
 
 # add url before command because env HTTP_HOST is not set yet
 if ! wp --url="$url" core is-installed; then

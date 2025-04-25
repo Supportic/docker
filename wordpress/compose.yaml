@@ -30,6 +30,7 @@ services:
     init: true
     user: ${UID:-1000}
     healthcheck:
+      test: curl --fail http://localhost:${WORDPRESS_PORT_HOST:-80} || exit 1
       start_period: 10s
       interval: 10s
       timeout: 5s
@@ -49,6 +50,8 @@ services:
       # for symlink.sh, absolute paths only
       DEV_DIR: /home/$UNAME/wp-dev/
       WORDPRESS_DIR: /var/www/html/
+      # for setup-wordpress.sh
+      WORDPRESS_PORT_HOST: ${WORDPRESS_PORT_HOST:-80}
     depends_on:
       db:
         condition: service_healthy
