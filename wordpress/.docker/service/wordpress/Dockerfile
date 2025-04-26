@@ -8,7 +8,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
   && echo $TZ > /etc/timezone  \
   && dpkg-reconfigure -f noninteractive tzdata
 
-# enable Apache modules
+# enable Apache modules ($APACHE_CONFDIR/mods-available)
 # mod_headers for htaccess
 ARG APACHE_MODULES="headers"
 RUN a2enmod $APACHE_MODULES

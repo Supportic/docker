@@ -18,7 +18,7 @@ wpcli:
 ###############################
 
 start:
-	docker compose up -d wordpress db memcached adminer mailpit
+	docker compose up -d wordpress db nginx memcached adminer mailpit
 stop:
 	docker compose stop
 down:
@@ -43,7 +43,7 @@ install-precondition:
 install-image:
 	docker compose build --pull wordpress wpcli
 	$(MAKE) start
-	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") > /dev/null 2> &1 || true
+	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") > /dev/null 2>&1 || true
 
 install-wordpress:
 	@echo "Installing WordPress..."

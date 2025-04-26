@@ -5,7 +5,7 @@ set -Eeuo pipefail
 # echo "Running as: $(id -un)"
 
 language_packs="de_DE"
-url="http://localhost:${WORDPRESS_PORT_HOST:-80}"
+url="http://localhost"
 
 # add url before command because env HTTP_HOST is not set yet
 if ! wp --url="$url" core is-installed; then
@@ -25,6 +25,9 @@ if ! wp --url="$url" core is-installed; then
   wp option update date_format "d.m.Y"
   wp rewrite structure '/%postname%/'
   wp language core install "$language_packs" > /dev/null 2>&1
+
+ # hide welcome panel on dashboard
+  wp user meta update $(wp user list --field=ID --role=administrator) show_welcome_panel 0
 
   # delete existing pages and posts (and connected comments)
   wp post delete $(wp post list --post_type='page,post' --format=ids) --force
