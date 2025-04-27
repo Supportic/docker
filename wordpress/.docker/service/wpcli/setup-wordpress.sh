@@ -7,6 +7,10 @@ set -Eeuo pipefail
 language_packs="de_DE"
 url="http://localhost"
 
+if [ -n "$WORDPRESS_PORT_HOST" ] && [ "$WORDPRESS_PORT_HOST" -ne 80 ]; then
+  url="http://localhost:${WORDPRESS_PORT_HOST}"
+fi
+
 # add url before command because env HTTP_HOST is not set yet
 if ! wp --url="$url" core is-installed; then
   echo >&2 "Installing WordPress"

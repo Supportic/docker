@@ -1,9 +1,9 @@
 # Wordpress Playground
 
-Frontend: http://localhost  
-Backend: http://localhost/wp-admin  
-Adminer: http://localhost:8080  
-Mailpit: http://localhost:8025
+Frontend: [http://localhost](http://localhost)  
+Backend: [http://localhost/wp-admin](http://localhost/wp-admin)  
+Adminer: [http://localhost:8080](http://localhost:8080)  
+Mailpit: [http://localhost:8025](http://localhost:8025)
 
 | **Command**    | **Description**                         |
 | -------------- | --------------------------------------- |
@@ -43,6 +43,42 @@ If you want to make sure all symlinks are in sync (broken,new,current) you can r
 WordPress options: https://codex.wordpress.org/Option_Reference
 
 Might need to define PHP variables WP_SITEURL and WP_HOME in the future.
+
+## Add more WP instances to NGINX
+
+- connect wordpress container of new WP instance with same network as NGINX
+  ```
+  networks:
+    nginx-network:
+      name: project-name-network
+      driver: bridge
+      external: true
+  ```
+- compose.yaml nginx: add additional port to expose on host
+- make sure WP_HOME and WP_SITEURL has the correct port (in `.wordpress.env`)
+- duplicate nginx conf and change ports
+
+```conf
+upstream wpdemo2 {
+  # docker containers: use hostname
+  server project-name-wordpress:80;
+}
+
+server {
+  listen [::]:3000 default_server ipv6only=on;
+  listen 0.0.0.0:3000 default_server;
+
+  location @proxy {
+    proxy_pass http://wpdemo2;
+
+    proxy_set_header   X-Forwarded-Host $host:3000;
+    proxy_set_header   X-Forwarded-Port 3000;
+
+    proxy_redirect http://localhost/ http://$host:3000/;
+    proxy_set_header   Host $host:3000;
+  }
+}
+```
 
 ## Known issues
 
