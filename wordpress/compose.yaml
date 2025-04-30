@@ -31,7 +31,7 @@ services:
     healthcheck:
       test: curl --fail http://localhost:${WORDPRESS_PORT_HOST:-80} || exit 1
       start_period: 10s
-      interval: 10s
+      interval: 60s
       timeout: 5s
       retries: 3
     volumes:
