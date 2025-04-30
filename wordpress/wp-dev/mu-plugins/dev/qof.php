@@ -37,6 +37,8 @@ add_filter( 'feed_links_show_comments_feed', '__return_false' );
 add_filter( 'the_generator', '__return_false' );
 remove_action( 'wp_head', 'wp_generator' );
 
+// enable customizer
+add_action( 'customize_register', '__return_true' );
 
 if (!function_exists('action_plugins_loaded')){
     add_action('plugins_loaded', 'action_plugins_loaded' );
