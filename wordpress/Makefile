@@ -57,7 +57,7 @@ delete-wordpress:
 	@echo "WordPress files deleted."
 
 log:
-	$(WORDPRESS_BASH_RUN) -c "tail -f -n 30 wp-content/debug.log"
+	$(WORDPRESS_BASH_RUN) -c "tail -f -n 30 /var/www/html/wp-content/debug.log 2> /dev/null"
 
 symlink-docker-create:
 	$(WORDPRESS_BASH_RUN) -c 'symlink create'
