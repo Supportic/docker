@@ -71,6 +71,8 @@ services:
       - ./.docker/service/nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
       - wordpress
+    post_start:
+      - command: chown -R ${UID}:${GID} /var/log/nginx
 
   wpcli:
     container_name: ${PROJECT_NAME}-wpcli
