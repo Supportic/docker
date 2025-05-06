@@ -6,6 +6,13 @@ upstream wpdemo2 {
   server project-name-wordpress:80;
 }
 
+# define loggable files via regex (0 = not loggable, 1 = loggable)
+map $uri $loggable {
+    default                                   1;
+    ~^/(?:favicon|apple-touch-icon)           0;
+    /robots.txt                               0;
+}
+
 server {
   listen [::]:3000 default_server ipv6only=on;
   listen 0.0.0.0:3000 default_server;
@@ -26,10 +33,6 @@ server {
     proxy_set_header   Host $host:3000;
   }
 
-  location / {
-    try_files $uri @proxy;
-  }
-
   # Redirect server error pages to the static page /50x.html
   error_page 500 502 503 504 /50x.html;
   location = /50x.html {
@@ -38,36 +41,30 @@ server {
 
   include /etc/nginx/conf.d/config/forbidden.conf;
 
-  location = /favicon.ico {
-    try_files $uri @proxy;
-
-    log_not_found off;
-    access_log off;
-  }
-
-  location = /robots.txt {
-    try_files $uri @proxy;
-
-    allow all;
-    log_not_found off;
-    access_log off;
-  }
-
   # Cache for static assets
-  location ~*  \.(jpe?g|png|webp|gif|css|js|ico)$ {
-    try_files $uri @proxy;
-
+  location ~* \.(css|js|ico)$ {
     expires max;
     log_not_found off;
+    try_files $uri @proxy;
   }
 
-  # prevent image hotlinking, except for provided domains (usefull when a CDN is not in use)
-  location ~ \.(jpe?g|png|webp|gif)$ {
-    try_files $uri @proxy;
-
+  # prevent image hotlinking, except for provided domains
+  # use this only when you dont have a CDN
+  # change domain to your own
+  # check: curl -I --referer http://comes-from.example.com http://localhost/wp-content/uploads/2025/04/image.jpg
+  location ~* \.(jpe?g|png|webp|gif)$ {
     valid_referers none blocked localhost *.localhost;
     if ($invalid_referer) {
       return 403;
     }
+
+    # Apply caching if referer is valid
+    expires max;
+    log_not_found off;
+    try_files $uri @proxy;
+  }
+
+  location / {
+    try_files $uri @proxy;
   }
 }
