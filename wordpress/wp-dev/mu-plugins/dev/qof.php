@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+// Exit if accessed directly outside wordpress context.
+defined('ABSPATH') || exit;
+
 /*
 Plugin Name:  Quality of Life Features
 Description:  Improve local development.
@@ -16,13 +19,13 @@ License:      MIT License
 // Exit if accessed directly outside wordpress context.
 defined('ABSPATH') || exit;
 
-if (!function_exists('qof_remove_admin_bar_nodes')) {
-    function qof_remove_admin_bar_nodes() {
+if (!function_exists('wpdev_remove_admin_bar_nodes')) {
+    function wpdev_remove_admin_bar_nodes() {
         // Hide WP Logo from the admin bar
         global $wp_admin_bar;
         $wp_admin_bar->remove_node( 'wp-logo' );
     }
-    add_action( 'admin_bar_menu', 'qof_remove_admin_bar_nodes', PHP_INT_MAX );
+    add_action( 'admin_bar_menu', 'wpdev_remove_admin_bar_nodes', PHP_INT_MAX );
 }
 
 // disable-xmlrpc
@@ -39,6 +42,21 @@ remove_action( 'wp_head', 'wp_generator' );
 
 // enable customizer
 add_action( 'customize_register', '__return_true' );
+
+// dequeue jQuery Migrate from frontend
+function wpdev_dequeue_jquery_migrate( $scripts ) {
+	if (
+        !is_admin()
+        && !empty( $scripts->registered['jquery'])
+    ) {
+		$jquery_dependencies = $scripts->registered['jquery']->deps;
+		$scripts->registered['jquery']->deps = array_diff(
+             $jquery_dependencies,
+             ['jquery-migrate']
+        );
+	}
+}
+add_action( 'wp_default_scripts', 'wpdev_dequeue_jquery_migrate' );
 
 if (!function_exists('action_plugins_loaded')){
     add_action('plugins_loaded', 'action_plugins_loaded' );

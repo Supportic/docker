@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+// Exit if accessed directly outside wordpress context.
+defined('ABSPATH') || exit;
+
 /*
 Plugin Name:  WP Core Updates Disabler
 Version:      1.0.0

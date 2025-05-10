@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+// Exit if accessed directly outside wordpress context.
+defined('ABSPATH') || exit;
+
 /*
 Plugin Name:  Query Monitor Settings
 Description:  Prevent creating db.php symlink
