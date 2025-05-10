@@ -60,6 +60,8 @@ log:
 	tail -f -n 30 wordpress/wp-content/debug.log 2> /dev/null
 clean-log:
 	rm -f wordpress/wp-content/debug.log; touch wordpress/wp-content/debug.log
+cc:
+	$(WP_CLI_RUN) w3tc flush all
 
 symlink-docker-create:
 	$(WORDPRESS_BASH_RUN) -c 'symlink create'

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Exit if accessed directly outside wordpress context.
+// Exit if accessed directly outside WordPress context.
 defined('ABSPATH') || exit;
 
 /*
@@ -15,9 +15,6 @@ Requires at least: 6.0
 Requires PHP: 8.3
 License:      MIT License
 */
-
-// Exit if accessed directly outside wordpress context.
-defined('ABSPATH') || exit;
 
 if (!function_exists('wpdev_remove_admin_bar_nodes')) {
     function wpdev_remove_admin_bar_nodes() {

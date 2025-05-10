@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Exit if accessed directly outside wordpress context.
+// Exit if accessed directly outside WordPress context.
 defined('ABSPATH') || exit;
 
 /*
@@ -14,16 +14,13 @@ Text Domain:  wpdev-mailpit
 License:      MIT License
 */
 
-// Exit if accessed directly outside wordpress context.
-defined('ABSPATH') || exit;
-
 // show wp_mail() errors
-function onMailError( $wp_error ) {
+function on_mail_error( $wp_error ) {
     echo "<pre>";
     print_r($wp_error);
     echo "</pre>";
 }
-add_action( 'wp_mail_failed', 'onMailError', 10, 1 );
+add_action( 'wp_mail_failed', 'on_mail_error', 10, 1 );
 
 // replaces the default initial localhost domain in the mail_from address
 // wordpress@localhost vs wordpress@localhost.docker

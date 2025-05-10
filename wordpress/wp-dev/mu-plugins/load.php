@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+// Exit if accessed directly outside WordPress context.
+defined('ABSPATH') || exit;
+
 /*
 Plugin Name:  MU-Plugins Loader
 Description:  Loads all mu-plugins in the dev directory.
@@ -10,9 +13,6 @@ Author:       Supportic
 Text Domain:  wpdev-loader
 License:      MIT License
 */
-
-// Exit if accessed directly outside wordpress context.
-defined('ABSPATH') || exit;
 
 // add plugins here
 require WPMU_PLUGIN_DIR.'/dev/dev.php';
