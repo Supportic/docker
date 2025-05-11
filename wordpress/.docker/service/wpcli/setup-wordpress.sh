@@ -30,8 +30,12 @@ if ! wp --url="$url" core is-installed; then
   wp rewrite structure '/%postname%/'
   wp language core install "$language_packs" > /dev/null 2>&1
 
+  # create user member
+  wp user create member member@wpdemo.com --user_pass=member --role=subscriber  --quiet
+
  # hide welcome panel on dashboard
   wp user meta update $(wp user list --field=ID --role=administrator) show_welcome_panel 0
+  wp user meta update $(wp user list --field=ID --role=subscriber) show_welcome_panel 0
 
   # delete existing pages and posts (and connected comments)
   wp post delete $(wp post list --post_type='page,post' --format=ids) --force
