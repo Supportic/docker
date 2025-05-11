@@ -19,7 +19,7 @@ License:      MIT License
  * https://developer.wordpress.org/reference/hooks/login_form/
  */
 
-/**
+ /**
  * Check if the current environment is 'local'.
  *
  * @return bool True if the environment is local, false otherwise.
@@ -33,14 +33,7 @@ function is_local_environment() {
  */
 function wpdev_add_auto_login_user_switcher() {
 
-    // already logged in, redirect to admin
-    if ( is_user_logged_in() && is_login() ) {
-        wp_redirect( admin_url() );
-        return;
-    }
-
-    // don't show the auto-login-user-switcher if not in a local environment
-	if ( !is_local_environment() || is_user_logged_in() || !is_login() ) {
+	if ( !is_local_environment() || !is_login() || is_user_logged_in() ) {
 		return;
 	}
 
@@ -84,6 +77,10 @@ add_action( 'login_form', 'wpdev_add_auto_login_user_switcher' );
 
 // auto submit the form when a user is selected
 function wpdev_add_auto_login_user_switcher_script() {
+	if ( !is_local_environment() || !is_login() || is_user_logged_in() ) {
+		return;
+	}
+
     ?>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', () => {
@@ -107,7 +104,7 @@ add_action( 'login_enqueue_scripts', 'wpdev_add_auto_login_user_switcher_script'
  */
 function wpdev_handle_auto_login_user_switcher() {
 	// Only process if in a local environment, not logged in, and the form was submitted.
-	if ( !is_local_environment() || is_user_logged_in() ) {
+	if ( !is_local_environment() || !is_login() || is_user_logged_in() ) {
 		return;
 	}
 
