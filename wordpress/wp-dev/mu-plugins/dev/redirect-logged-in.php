@@ -38,7 +38,8 @@ function wpdev_redirect_logged_in() {
         'retrievepassword',      // Password retrieval
         'rp',                    // Reset password
         'resetpass',             // Password reset
-        'entered_recovery_mode'  // Recovery mode
+        'entered_recovery_mode', // Recovery mode
+        'exit_recovery_mode'     // Exit Recovery mode
     ];
 
     $current_action = $_GET['action'] ?? '';
