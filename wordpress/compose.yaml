@@ -36,7 +36,7 @@ services:
       retries: 3
     volumes:
       - ./wordpress:/var/www/html
-      - ./wp-dev:/home/$UNAME/wp-dev:ro
+      - ./wp-dev:/home/$UNAME/wp-dev
     env_file:
       - .wordpress.env
     environment:
