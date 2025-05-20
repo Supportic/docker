@@ -3,3 +3,4 @@ debug-this
 w3-total-cache
 wp-dummy-content-generator
 user-switching
+wp-crontrol
