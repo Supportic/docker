@@ -34,26 +34,47 @@ remove_action( 'wp_head', 'feed_links_extra', 3 );
 add_filter( 'feed_links_show_comments_feed', '__return_false' );
 
 // hide the meta tag generator from head
-add_filter( 'the_generator', '__return_false' );
-remove_action( 'wp_head', 'wp_generator' );
+// remove versions from styles and scripts (only for WP)
+add_filter( 'the_generator', '__return_empty_string' );
+if(!function_exists('wpdev_remove_version_from_assets')){
+    /**
+     * @param string|bool $url
+     * @param string $handle - enqueued script/style handle
+     */
+    function wpdev_remove_version_from_assets($url, $handle){
+        $wp_version = get_bloginfo('version');
+
+        // tests for bool false since inline scripts/styles don't have href
+        if (is_string($url) && strpos($url, 'ver='.$wp_version) !== false){
+            $url = remove_query_arg('ver', $url);
+        }
+
+        return $url;
+    }
+
+    add_filter('style_loader_src', 'wpdev_remove_version_from_assets', PHP_INT_MAX, 2);
+    add_filter('script_loader_src', 'wpdev_remove_version_from_assets', PHP_INT_MAX, 2);
+}
 
 // enable customizer
 add_action( 'customize_register', '__return_true' );
 
 // dequeue jQuery Migrate from frontend
-function wpdev_dequeue_jquery_migrate( $scripts ) {
-	if (
-        !is_admin()
-        && !empty( $scripts->registered['jquery'])
-    ) {
-		$jquery_dependencies = $scripts->registered['jquery']->deps;
-		$scripts->registered['jquery']->deps = array_diff(
-             $jquery_dependencies,
-             ['jquery-migrate']
-        );
-	}
+if(!function_exists('wpdev_dequeue_jquery_migrate')){
+    function wpdev_dequeue_jquery_migrate( $scripts ) {
+        if (
+            !is_admin()
+            && !empty( $scripts->registered['jquery'])
+        ) {
+            $jquery_dependencies = $scripts->registered['jquery']->deps;
+            $scripts->registered['jquery']->deps = array_diff(
+                 $jquery_dependencies,
+                 array( 'jquery-migrate' )
+            );
+        }
+    }
+    add_action( 'wp_default_scripts', 'wpdev_dequeue_jquery_migrate' );
 }
-add_action( 'wp_default_scripts', 'wpdev_dequeue_jquery_migrate' );
 
 if (!function_exists('action_plugins_loaded')){
     add_action('plugins_loaded', 'action_plugins_loaded' );
