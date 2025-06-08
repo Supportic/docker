@@ -1,5 +1,6 @@
+ARG PHP_VERSION='8.3'
 # always alpine
-FROM wordpress:cli-2-php8.3
+FROM wordpress:cli-2-php${PHP_VERSION}
 LABEL autodelete="true"
 
 USER root

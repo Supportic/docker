@@ -1,7 +1,7 @@
 # ~* has higher precedence than /,
 # access to resources requires therefore try_files
 
-upstream wpdemo2 {
+upstream wpenv2 {
   # docker containers
   server project-name-wordpress:80;
 }
@@ -24,7 +24,7 @@ server {
   sendfile off;
 
   location @proxy {
-    proxy_pass http://wpdemo2;
+    proxy_pass http://wpenv2;
 
     proxy_set_header   X-Forwarded-Host $host:3000;
     proxy_set_header   X-Forwarded-Port 3000;

@@ -59,7 +59,7 @@ Might need to define PHP variables WP_SITEURL and WP_HOME in the future.
 - duplicate nginx conf and change ports
 
 ```conf
-upstream wpdemo2 {
+upstream wpenv2 {
   # docker containers: use hostname
   server project-name-wordpress:80;
 }
@@ -69,7 +69,7 @@ server {
   listen 0.0.0.0:3000 default_server;
 
   location @proxy {
-    proxy_pass http://wpdemo2;
+    proxy_pass http://wpenv2;
 
     proxy_set_header   X-Forwarded-Host $host:3000;
     proxy_set_header   X-Forwarded-Port 3000;

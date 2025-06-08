@@ -5,7 +5,6 @@ networks:
   default:
     name: ${PROJECT_NAME}-network
     driver: bridge
-    external: false
 
 services:
   ########################
@@ -23,6 +22,8 @@ services:
         - UNAME=${UNAME}
         - GNAME=${GNAME}
         - PASS=${PASS}
+        - WP_VERSION=${WP_VERSION}
+        - PHP_VERSION=${PHP_VERSION}
       target: develop
     working_dir: /var/www/html
     restart: unless-stopped
@@ -86,6 +87,7 @@ services:
         - UNAME=${UNAME}
         - GNAME=${GNAME}
         - PASS=${PASS}
+        - PHP_VERSION=${PHP_VERSION}
     init: true
     # make curl localhost possible inside this container
     network_mode: "service:wordpress"

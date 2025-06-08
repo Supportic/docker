@@ -1,4 +1,6 @@
-FROM wordpress:6.7.2-php8.3-apache AS cleanup
+ARG WP_VERSION='6.8.1'
+ARG PHP_VERSION='8.3'
+FROM wordpress:${WP_VERSION}-php${PHP_VERSION}-apache AS cleanup
 
 USER root
 

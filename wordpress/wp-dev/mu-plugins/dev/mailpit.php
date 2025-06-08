@@ -40,7 +40,7 @@ function mailer_config($phpmailer){
     $phpmailer->CharSet  = "utf-8";
 
     // define address here or use the default 'from_mail' address
-    $phpmailer->From = "mailpit@wpdemo.com";
+    $phpmailer->From = "mailpit@wpenv.com";
     $phpmailer->FromName = "Admin";
 
     // $phpmailer->SMTPAuth = true;

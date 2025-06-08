@@ -17,10 +17,10 @@ if ! wp --url="$url" core is-installed; then
 
   wp core install \
     --url="$url" \
-    --title=WPDemo \
+    --title=WPEnv \
     --admin_user=admin \
     --admin_password=admin \
-    --admin_email=admin@wpdemo.com \
+    --admin_email=admin@wpenv.com \
     --locale=en_US \
     --skip-email \
     --quiet
@@ -28,10 +28,10 @@ if ! wp --url="$url" core is-installed; then
   wp option update time_format "H:i"
   wp option update date_format "d.m.Y"
   wp rewrite structure '/%postname%/'
-  wp language core install "$language_packs" > /dev/null 2>&1
+  wp language core install "$language_packs" >/dev/null 2>&1
 
   # create user member
-  wp user create member member@wpdemo.com --user_pass=member --role=subscriber  --quiet
+  wp user create member member@wpenv.com --user_pass=member --role=subscriber  --quiet
 
  # hide welcome panel on dashboard
   wp user meta update $(wp user list --field=ID --role=administrator) show_welcome_panel 0
@@ -56,7 +56,7 @@ if wp --url="$url" core is-installed; then
     else
       wp theme update "$theme"
     fi
-    wp language theme install "$theme" "$language_packs" > /dev/null 2>&1
+    wp language theme install "$theme" "$language_packs" >/dev/null 2>&1
   done
 
   echo >&2 "Updating Theme Translations"
@@ -74,7 +74,7 @@ if wp --url="$url" core is-installed; then
     else
       wp plugin update "$plugin"
     fi
-    wp language plugin install "$plugin" "$language_packs" > /dev/null 2>&1
+    wp language plugin install "$plugin" "$language_packs" >/dev/null 2>&1
   done
 
   echo >&2 "Updating Plugin Translations"
