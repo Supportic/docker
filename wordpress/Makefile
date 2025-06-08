@@ -42,6 +42,7 @@ install-precondition:
 
 install-image:
 	docker compose build --pull wordpress wpcli
+	docker compose pull db memcached adminer mailpit
 	$(MAKE) start
 	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") > /dev/null 2>&1 || true
 
