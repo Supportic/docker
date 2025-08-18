@@ -130,3 +130,27 @@ function wpdev_handle_auto_login_user_switcher() {
 	}
 }
 add_action( 'login_init', 'wpdev_handle_auto_login_user_switcher' );
+
+/**
+ * Prevent default authentication errors when using auto-login user switcher.
+ */
+function wpdev_bypass_authenticate_for_auto_login_user_switcher( $user, $username, $password ) {
+    $isLoginAction = isset( $_POST['auto_login_user_switcher_action'] ) && $_POST['auto_login_user_switcher_action'] === 'auto_login_user';
+
+    $isValidUserId = isset( $_POST['auto_login_user_switcher_user_id'] ) && !empty( $_POST['auto_login_user_switcher_user_id'] );
+
+    if (
+        is_local_environment()
+        && is_login()
+        && $isLoginAction
+        && $isValidUserId
+    ) {
+        $user_id = absint( $_POST['auto_login_user_switcher_user_id'] );
+        $user_obj = get_user_by( 'id', $user_id );
+        if ( $user_obj && !is_wp_error( $user_obj ) ) {
+            return $user_obj;
+        }
+    }
+    return $user;
+}
+add_filter( 'authenticate', 'wpdev_bypass_authenticate_for_auto_login_user_switcher', 1, 3 );
