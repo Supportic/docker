@@ -32,7 +32,11 @@ erase:
 	docker compose down -v --rmi all
 
 install: install-precondition install-image install-wordpress
-rebuild: remove install
+reinstall: remove install
+# reset WP to default installation
+reset:
+	$(WP_CLI_RUN) db reset --defaults --yes
+	$(MAKE) install-wordpress
 
 install-precondition:
 	@if [ ! -f .env ]; then\
