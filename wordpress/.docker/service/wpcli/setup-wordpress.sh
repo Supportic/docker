@@ -28,20 +28,20 @@ if ! wp --url="$url" core is-installed; then
   wp option update time_format "H:i"
   wp option update date_format "d.m.Y"
   wp rewrite structure '/%postname%/'
-  wp language core install "$language_packs" >/dev/null 2>&1
+  wp language core install "$language_packs" > /dev/null 2>&1
 
   # create user member
-  wp user create member member@wpenv.com --user_pass=member --role=subscriber  --quiet
+  wp user create member member@wpenv.com --role=subscriber --user_pass=member --quiet
 
- # hide welcome panel on dashboard
-  wp user meta update $(wp user list --field=ID --role=administrator) show_welcome_panel 0
-  wp user meta update $(wp user list --field=ID --role=subscriber) show_welcome_panel 0
+  # hide welcome panel on dashboard
+  wp user meta update "$(wp user list --field=ID --role=administrator)" show_welcome_panel 0
+  wp user meta update "$(wp user list --field=ID --role=subscriber)" show_welcome_panel 0
 
   # delete existing pages and posts (and connected comments)
   wp post delete $(wp post list --post_type='page,post' --format=ids) --force
 
   wp theme delete --all
-  wp plugin uninstall --all
+  wp plugin uninstall --deactivate --all 2>/dev/null
   # wp plugin delete --all
 fi
 
@@ -50,7 +50,7 @@ if wp --url="$url" core is-installed; then
 
   # wp theme update --all
 
-  for theme in $(cat /install-themes.txt); do
+  grep -v '^ *#' /install-themes.txt | while IFS= read -r theme; do
     if ! wp theme is-installed "$theme"; then
       wp theme install "$theme" --activate
     else
@@ -68,7 +68,7 @@ if wp --url="$url" core is-installed; then
 
   # wp plugin install --activate $(cat /plugins.txt)
 
-  for plugin in $(cat /install-plugins.txt); do
+  grep -v '^ *#' /install-plugins.txt | while IFS= read -r plugin; do
     if ! wp plugin is-installed "$plugin"; then
       wp plugin install "$plugin" --activate
     else
