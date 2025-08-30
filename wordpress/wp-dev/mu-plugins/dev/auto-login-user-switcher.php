@@ -7,7 +7,7 @@ Plugin Name:  Auto Login User Switcher
 Version:      1.0.0
 Author:       Supportic
 Text Domain:  wpdev-auto-login-user-switcher
-License:      MIT License
+License:      MIT
 */
 
 /**
@@ -18,6 +18,12 @@ License:      MIT License
  * However, it is not applied on the /wp-login.php form because it utelizes another function to render.
  * https://developer.wordpress.org/reference/hooks/login_form/
  */
+
+/**
+ * Test: when user loses session (wp-login.php?interim-login=1)
+ * remove all cookies in devtools and call wp.heartbeat.connectNow() function in devtools console
+ */
+
 
  /**
  * Check if the current environment is 'local'.
@@ -103,32 +109,104 @@ add_action( 'login_enqueue_scripts', 'wpdev_add_auto_login_user_switcher_script'
  * Handle the auto-login-user-switcher based on the dropdown selection.
  */
 function wpdev_handle_auto_login_user_switcher() {
-	// Only process if in a local environment, not logged in, and the form was submitted.
-	if ( !is_local_environment() || !is_login() || is_user_logged_in() ) {
-		return;
+    // Check if the auto-login form was submitted with the correct action and nonce.
+    $is_auto_login_action = isset( $_POST['auto_login_user_switcher_action'] ) && $_POST['auto_login_user_switcher_action'] === 'auto_login_user';
+
+    $has_user_id_in_request = !empty( $_POST['auto_login_user_switcher_user_id'] );
+
+    if (! $has_user_id_in_request || !$is_auto_login_action ) {
+        return;
+    }
+
+    $is_verified_nonce = isset( $_POST['auto_login_user_switcher_nonce'] ) && wp_verify_nonce( $_POST['auto_login_user_switcher_nonce'], 'auto_login_user_switcher_login' );
+
+    if(!$is_verified_nonce){
+        wp_die( esc_html__( 'You do not have permission to perform this action.', 'wpdev' ), esc_html__( 'Permission Denied', 'wpdev' ), [ 'response' => 403 ] );
+    }
+
+    $user_id = absint( $_POST['auto_login_user_switcher_user_id'] );
+    /** @var WP_User $user */
+    $user = get_user_by( 'id', $user_id );
+
+    if ( ! $user || is_wp_error( $user ) ) {
+		wp_die( esc_html__( 'Invalid user ID.', 'wpdev' ), esc_html__( 'Error', 'wpdev' ), [ 'response' => 400 ] );
 	}
 
-    $isLoginAction = isset( $_POST['auto_login_user_switcher_action'] ) && $_POST['auto_login_user_switcher_action'] === 'auto_login_user';
+    // Get the current user ID *before* clearing auth cookies.
+    $current_user_id = get_current_user_id();
 
-    $isValidNonce = isset( $_POST['auto_login_user_switcher_nonce'] ) && wp_verify_nonce( $_POST['auto_login_user_switcher_nonce'], 'auto_login_user_switcher_login' );
+    // Log the new user in by clearing old cookies and setting new ones.
+    wp_clear_auth_cookie();
+    wp_set_current_user( $user->ID, $user->user_login );
+    wp_set_auth_cookie( $user->ID, true, is_ssl() );
 
-    $isValidUserId = isset( $_POST['auto_login_user_switcher_user_id'] ) && !empty( $_POST['auto_login_user_switcher_user_id'] );
+    // default: redirect the user to the admin dashboard.
+    $redirect_to = admin_url();
 
-	// Check if our form was submitted and the nonce is valid.
-	if ($isLoginAction && $isValidUserId && $isValidNonce) {
-		$user_id = absint( $_POST['auto_login_user_switcher_user_id'] );
-		$user = get_user_by( 'id', $user_id );
+    if ( ! empty( $_REQUEST['redirect_to'] ) ) {
+        $redirect_to = wp_sanitize_redirect( $_REQUEST['redirect_to'] );
+    }
 
-		if ( $user && !is_wp_error( $user ) ) {
-			// Log the user in.
-			wp_set_current_user( $user->ID, $user->user_login );
-			wp_set_auth_cookie( $user->ID, true );
+    $is_interim_login = isset( $_REQUEST['interim-login'] ) && '1' === $_REQUEST['interim-login'];
 
-			// Redirect to the admin dashboard.
-			wp_redirect( admin_url() );
-		}
-	}
+    // if it's not a session timeout login, do a regular redirect
+    if(!$is_interim_login){
+        wp_safe_redirect( $redirect_to );
+        exit;
+    }
+
+    // Handle interim login (overlay/popup after session timeout)
+    $message = '<p class="message">' . esc_html__( 'You have logged in successfully.', 'wpdev' ) . '</p>';
+    login_header( '', $message );
+
+    ?>
+    <script type="text/javascript">
+    // Use a self-invoking function to avoid global variable pollution.
+    (function() {
+        const parent = window.parent;
+
+        if (!parent) {
+            return;
+        }
+
+        const $ = parent.jQuery, windowParent = parent.window;
+        const { adminpage, wp } = parent;
+
+        setTimeout(function(){
+            // Remove the beforeunload event handler first
+            $(windowParent).off('beforeunload.wp-auth-check');
+
+            // When on the Edit Post screen, speed up heartbeat
+            // after the user logs in to quickly refresh nonces.
+            if ( ( adminpage === 'post-php' || adminpage === 'post-new-php' ) && wp && wp.heartbeat ) {
+                wp.heartbeat.connectNow();
+            }
+
+            /**
+             * Improve this when the previous user is the same as the new logged in user just close the modal and remove the iframe instead of a reload.
+             *
+            */
+            // $('#wp-auth-check-wrap').fadeOut(200, function() {
+            //     $('#wp-auth-check-wrap').addClass('hidden').css('display', '');
+            //     $('#wp-auth-check-frame').remove();
+            //     $('body', parent.document).removeClass('modal-open');
+            // });
+
+            if ( parent.document ) {
+                parent.location.reload();
+            } else {
+                window.opener.location.reload();
+                window.close();
+            }
+        }, 300);
+    })();
+    </script>
+    <?php
+
+    // important to prevent the normal login to continue
+    exit;
 }
+// not possible to retrieve current user in login_init
 add_action( 'login_init', 'wpdev_handle_auto_login_user_switcher' );
 
 /**
