@@ -4,6 +4,7 @@ set -Eeuo pipefail
 
 # echo "Running as: $(id -un)"
 
+is_multisite=false
 language_packs="de_DE"
 url="http://localhost"
 
@@ -13,17 +14,25 @@ fi
 
 # add url before command because env HTTP_HOST is not set yet
 if ! wp --url="$url" core is-installed; then
-  echo >&2 "Installing WordPress"
 
-  wp core install \
-    --url="$url" \
-    --title=WPEnv \
-    --admin_user=admin \
-    --admin_password=admin \
-    --admin_email=admin@wpenv.com \
-    --locale=en_US \
-    --skip-email \
-    --quiet
+  common_install_flags=(
+    "--url=$url"
+    "--title=WPEnv"
+    "--admin_user=admin"
+    "--admin_password=admin"
+    "--admin_email=admin@wpenv.com"
+    "--skip-email"
+    "--quiet"
+  )
+
+  if [ "$is_multisite" = true ]; then
+    echo >&2 "Installing WordPress Multisite"
+    wp core multisite-install "${common_install_flags[@]}" "--skip-config"
+  else
+    echo >&2 "Installing WordPress"
+    wp core install "${common_install_flags[@]}" "--locale=en_US"
+  fi
+
   wp option update timezone_string "Europe/Berlin"
   wp option update time_format "H:i"
   wp option update date_format "d.m.Y"

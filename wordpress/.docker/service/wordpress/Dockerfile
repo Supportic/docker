@@ -36,6 +36,8 @@ COPY apache/config/security.conf "$APACHE_CONFDIR/conf-available/security.conf"
 
 ## changes in /usr/src/wordpress directory sometimes does not track changes on file save when reloading the browser
 # COPY --chown=www-data:www-data .htaccess /usr/src/wordpress/.htaccess
+## multisite subfolder
+# COPY --chown=www-data:www-data .htaccess.multisite.subfolder /usr/src/wordpress/.htaccess
 
 FROM cleanup AS base
 

@@ -1,5 +1,5 @@
 # BEGIN WordPress Multisite
-# Using subfolder network type: https://wordpress.org/support/article/htaccess/#multisite
+# Using subfolder network type: https://wordpress.org/documentation/article/htaccess/#multisite
 
 RewriteEngine On
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

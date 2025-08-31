@@ -14,6 +14,7 @@ Mailpit: [http://localhost:8025](http://localhost:8025)
 | `make restart` | Restart the environment                 |
 | `make remove`  | Remove WordPress and volumes            |
 | `make erase`   | Remove everything (incl. base images)   |
+| `make reset`   | Reset WordPress Installation            |
 | `make shell`   | Enter the container                     |
 | `make wpcli`   | Enter the WP-CLI container              |
 | `make log`     | Print content of debug.log into console |
@@ -24,6 +25,13 @@ Mailpit: [http://localhost:8025](http://localhost:8025)
 - Place your theme, plugin, mu-plugins inside the wp-dev directory.
 - execute `make install`
 - go to backend w3-total-cache plugin settings and press skip
+
+## Install Multisite
+
+1. enable commented out multisite env variable in `.wordpress.env`
+2. enable COPY of `.htaccess.multisite.subfolder` or `.htaccess.multisite.subdomain` in WordPress Dockerfile `.docker/service/wordpress/Dockerfile`
+3. enable commented out multisite nginx rule in `.docker/service/nginx/conf.d/wpenv.conf`
+4. set `is_multisite` to true in `.docker/service/wpcli/setup-wordpress.sh`
 
 ### Adding new themes and plugins
 

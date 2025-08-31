@@ -14,8 +14,8 @@ map $uri $loggable {
 }
 
 server {
-  listen [::]:3000 default_server ipv6only=on;
-  listen 0.0.0.0:3000 default_server;
+  listen [::]:3000 ipv6only=on;
+  listen 0.0.0.0:3000;
 
   server_name _;
   charset utf-8;
@@ -63,6 +63,14 @@ server {
     log_not_found off;
     try_files $uri @proxy;
   }
+
+  ## WordPress multisite subfolder admin handling
+  # location ~ ^/[^/]+/wp-admin(/.*)?$ {
+  #   if ($uri ~ wp-admin$) {
+  #     return 301 $scheme://$host$uri/;
+  #   }
+  #   try_files $uri @proxy;
+  # }
 
   location / {
     try_files $uri @proxy;
