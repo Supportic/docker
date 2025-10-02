@@ -38,15 +38,29 @@
         "zobo.php-intellisense",
         "junstyle.twig-language",
         "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig",
         "syler.sass-indented",
         "Vue.volar",
         "hollowtree.vue-snippets",
         "mhutchie.git-graph",
-        "ms-azuretools.vscode-docker"
+        "sleistner.vscode-fileutils",
+        "zyrong.node-modules",
+        "christian-kohler.npm-intellisense",
+        "cipchk.cssrem",
+        "gencer.html-slim-scss-css-class-completion",
+        "codeandstuff.package-json-upgrade",
+        "ms-azuretools.vscode-docker",
+        "DEVSENSE.composer-php-vscode",
+        "MykhailoKushnir.vscode-php-getter-setter",
+        "mansoorkhan96.php-cs-fixer"
       ],
       "settings": {
         "php.validate.executablePath": "/usr/local/bin/php",
         "terminal.integrated.defaultProfile.linux": "bash",
+
+        "php.debug.ideKey": "VSCODE",
+        // disable double intellisense suggestions
+        "php.suggest.basic": false,
 
         "symfony-vscode.shellExecutable": "/bin/bash",
         "symfony-vscode.consolePath": "/usr/local/bin/symfony",
