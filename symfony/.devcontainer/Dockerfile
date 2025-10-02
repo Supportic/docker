@@ -13,6 +13,10 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 # RUN echo ${UNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${UNAME} &&\
 #   chmod 0440 /etc/sudoers.d/${UNAME}
 
+# required for docker-init script to initialize docker group, other programs still require a password
+# RUN echo "${UNAME} ALL=(root) PASSWD:ALL, NOPASSWD:/usr/sbin/groupadd,/usr/sbin/usermod" > "/etc/sudoers.d/${UNAME}" \
+#   && chmod 0440 "/etc/sudoers.d/${UNAME}"
+
 ### BEGIN DOCKER INSTALL
 # https://github.com/microsoft/vscode-dev-containers/tree/main/containers/docker-from-docker-compose#enabling-root-user-access-to-docker-in-the-container
 
@@ -38,8 +42,8 @@ RUN echo -e "#!/bin/sh\n\
 ### FINISH DOCKER INSTALL
 
 # install nvm (setup .bashrc), Node.js
-ARG NVM_VERSION=0.39.7
-ARG NODE_VERSION=20.11.0
+ARG NVM_VERSION=0.40.2
+ARG NODE_VERSION=24.4.0
 ENV NVM_DIR=/home/${UNAME}/.nvm
 
 # export home only for the current RUN layer for root because of install script
@@ -47,10 +51,10 @@ RUN set -ex && mkdir -p "${NVM_DIR}" && chown "${UNAME}" "${NVM_DIR}" \
   && export HOME="/home/${UNAME}" \
   && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash - \
   && . ~/.nvm/nvm.sh \
-  && nvm install "${NODE_VERSION}" \
+  && nvm install "${NODE_VERSION}" --latest-npm \
   && nvm alias default "${NODE_VERSION}" \
   && nvm use default \
-  && npm install -g npm@latest
+  && npm install @types/node
 
 ENV NODE_PATH=${NVM_DIR}/v${NODE_VERSION}/lib/node_modules
 ENV PATH=${NVM_DIR}/versions/node/v${NODE_VERSION}/bin:$PATH
