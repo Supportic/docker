@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Exit if accessed directly outside WordPress context.
+// Exit if accessed directly outside wordpress context.
 defined('ABSPATH') || exit;
 
 /*
@@ -13,58 +13,119 @@ Text Domain:  wpdev-disable-core-updates
 License:      MIT License
 */
 
-// remove cron events for core
-function filter_cron_events ( $event ) {
+function wpdev_disable_update_notices_version_checks() {
 
-	$ignore = array (
-		'wp_version_check',
-		'wp_maybe_auto_update',
-	);
+    // Remove nags (admin messages)
+    remove_action( 'admin_notices', 'update_nag', 3 );
+    remove_action( 'admin_notices', 'maintenance_nag' );
 
-	if ( in_array ( $event->hook, $ignore ) ) {
-		return false;
-	}
+    // Disable WP version check
+    remove_action( 'wp_version_check', 'wp_version_check' );
+    remove_action( 'admin_init', 'wp_version_check' );
+    wp_clear_scheduled_hook( 'wp_version_check' );
 
-	return $event;
+    add_filter( 'pre_option_update_core', '__return_null' );
 
-}
-add_action ( 'schedule_event', 'filter_cron_events' );
-
-// hide all upgrade notices
-function wpdev_hide_admin_notices () {
-	remove_action ( 'admin_notices', 'update_nag', 3 );
-}
-add_action ( 'admin_menu', 'wpdev_hide_admin_notices' );
-
-// remove the 'Updates' menu item from the admin interface
-function wpdev_remove_menus () {
-	global $submenu;
-	remove_submenu_page ( 'index.php', 'update-core.php' );
-}
-add_action ( 'admin_menu', 'wpdev_remove_menus', 102 );
-
-// disable core, theme and plugin updates
-function wpdev_disable_updates () {
+    // disable core, theme and plugin updates
 	remove_action ( 'load-update-core.php', 'wp_update_core' );
-}
-add_action ( 'init', 'wpdev_disable_updates', 1 );
 
-// fake last checked time (using __return_null makes the dashboard slow)
-function wpdev_last_checked () {
+    // Disable theme version checks
+    remove_action( 'wp_update_themes', 'wp_update_themes' );
+    remove_action( 'admin_init', '_maybe_update_themes' );
+    wp_clear_scheduled_hook( 'wp_update_themes' );
+
+    remove_action( 'load-themes.php', 'wp_update_themes' );
+    remove_action( 'load-update.php', 'wp_update_themes' );
+    remove_action( 'load-update-core.php', 'wp_update_themes' );
+
+    // Disable plugin version checks
+    remove_action( 'wp_update_plugins', 'wp_update_plugins' );
+    remove_action( 'admin_init', '_maybe_update_plugins' );
+    wp_clear_scheduled_hook( 'wp_update_plugins' );
+
+    remove_action( 'load-plugins.php', 'wp_update_plugins' );
+    remove_action( 'load-update.php', 'wp_update_plugins' );
+    remove_action( 'load-update-core.php', 'wp_update_plugins' );
+
+    // Disable auto updates
+    wp_clear_scheduled_hook( 'wp_maybe_auto_update' );
+
+    remove_action( 'wp_maybe_auto_update', 'wp_maybe_auto_update' );
+    remove_action( 'admin_init', 'wp_maybe_auto_update' );
+    remove_action( 'admin_init', 'wp_auto_update_core' );
+}
+add_action( 'admin_init', 'wpdev_disable_update_notices_version_checks' );
+
+/**
+ * Disable Background Updates and Auto-Updates tests in Site Health tests
+ */
+function wpdev_disable_update_checks_in_site_health( $tests ) {
+
+    unset( $tests['async']['background_updates'] );
+    unset( $tests['direct']['plugin_theme_auto_updates'] );
+
+    return $tests;
+
+}
+// Disable Site Health checks
+add_filter( 'site_status_tests', 'wpdev_disable_update_checks_in_site_health' );
+
+/**
+ * Override version check info stored in transients named update_core, update_plugins, update_themes.
+ * Fake last checked time (using __return_null makes the dashboard slow)
+ */
+function wpdev_override_version_check_info() {
+    include( ABSPATH . WPINC . '/version.php' ); // get $wp_version from here
 	global $wp_version;
-	return ( object ) array (
-		'last_checked' => time (),
+
+    return ( object ) array (
+		'updates' => array (),
+		'response' => array (),
 		'version_checked' => $wp_version,
-		'updates' => array ()
+		'last_checked' => time(),
 	);
 }
-add_filter ( 'pre_site_transient_update_core', 'wpdev_last_checked' );
 
-// disable automatic updates
-add_filter ( 'automatic_updater_disabled', '__return_true' );
+// Disable core update
+add_filter( 'pre_transient_update_core', 'wpdev_override_version_check_info' );
+add_filter( 'pre_site_transient_update_core', 'wpdev_override_version_check_info' );
+// Disable theme updates
+add_filter( 'pre_transient_update_themes', 'wpdev_override_version_check_info' );
+add_filter( 'pre_site_transient_update_themes', 'wpdev_override_version_check_info' );
+add_action( 'pre_set_site_transient_update_themes', 'wpdev_override_version_check_info', 20 );
+// Disable plugin updates
+add_filter( 'pre_transient_update_plugins', 'wpdev_override_version_check_info' );
+add_filter( 'pre_site_transient_update_plugins', 'wpdev_override_version_check_info' );
+add_action( 'pre_set_site_transient_update_plugins', 'wpdev_override_version_check_info', 20 );
 
-// disable update health check
-add_filter ( 'site_status_tests', function ( $tests ) {
-	unset ( $tests['async']['background_updates'] );
-	return $tests;
-});
+// Disable auto updates
+add_filter( 'automatic_updater_disabled', '__return_true' );
+if ( !defined( 'AUTOMATIC_UPDATER_DISABLED' ) ) {
+    define( 'AUTOMATIC_UPDATER_DISABLED', true );
+}
+if ( !defined( 'WP_AUTO_UPDATE_CORE' ) ) {
+    define( 'WP_AUTO_UPDATE_CORE', false );
+}
+add_filter( 'auto_update_core', '__return_false' );
+add_filter( 'wp_auto_update_core', '__return_false' );
+add_filter( 'allow_minor_auto_core_updates', '__return_false' );
+add_filter( 'allow_major_auto_core_updates', '__return_false' );
+add_filter( 'allow_dev_auto_core_updates', '__return_false' );
+add_filter( 'auto_update_plugin', '__return_false' );
+add_filter( 'auto_update_theme', '__return_false' );
+add_filter( 'auto_update_translation', '__return_false' );
+remove_action( 'init', 'wp_schedule_update_checks' );
+// Disable update emails
+add_filter( 'auto_core_update_send_email', '__return_false' );
+add_filter( 'send_core_update_notification_email', '__return_false' );
+add_filter( 'automatic_updates_send_debug_email', '__return_false' );
+
+/**
+ * Remove the 'Updates' menu item from the admin interface
+ */
+function wpdev_remove_updates_menu() {
+    global $submenu;
+    remove_submenu_page( 'index.php', 'update-core.php' );
+}
+// Remove Dashboard >> Updates menu item
+add_action( 'admin_menu', 'wpdev_remove_updates_menu' );
