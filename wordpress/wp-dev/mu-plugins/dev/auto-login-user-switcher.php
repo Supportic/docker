@@ -125,11 +125,11 @@ function wpdev_handle_auto_login_user_switcher() {
     }
 
     $user_id = absint( $_POST['auto_login_user_switcher_user_id'] );
-    /** @var WP_User $user */
+    /** @var WP_User|false $user */
     $user = get_user_by( 'id', $user_id );
 
-    if ( ! $user || is_wp_error( $user ) ) {
-		wp_die( esc_html__( 'Invalid user ID.', 'wpdev' ), esc_html__( 'Error', 'wpdev' ), [ 'response' => 400 ] );
+    if ( ! $user instanceof WP_User ) {
+		wp_die( esc_html__( 'Invalid user ID.', 'wpdev' ), esc_html__( 'Error', 'wpdev' ), [ 'response' => 400, 'back_link' => true ] );
 	}
 
     // Get the current user ID *before* clearing auth cookies.
@@ -139,6 +139,7 @@ function wpdev_handle_auto_login_user_switcher() {
     wp_clear_auth_cookie();
     wp_set_current_user( $user->ID, $user->user_login );
     wp_set_auth_cookie( $user->ID, true, is_ssl() );
+    do_action( 'wp_login', $user->user_login, $user );
 
     // default: redirect the user to the admin dashboard.
     $redirect_to = admin_url();
