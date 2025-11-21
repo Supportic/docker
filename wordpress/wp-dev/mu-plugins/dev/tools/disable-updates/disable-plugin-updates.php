@@ -25,6 +25,24 @@ function wpdev_disable_plugin_update_notices() {
 }
 add_action( 'admin_init', 'wpdev_disable_plugin_update_notices' );
 
+if(!function_exists('wpdev_override_version_check_info')){
+    /**
+     * Override version check info stored in transients named update_core, update_plugins, update_themes.
+     * Fake last checked time (using __return_null makes the dashboard slow)
+     */
+    function wpdev_override_version_check_info() {
+        include( ABSPATH . WPINC . '/version.php' ); // get $wp_version from here
+        global $wp_version;
+
+        return ( object ) array (
+            'updates' => array (),
+            'response' => array (),
+            'version_checked' => $wp_version,
+            'last_checked' => time(),
+        );
+    }
+}
+
 // Disable plugin updates
 add_filter( 'pre_transient_update_plugins', 'wpdev_override_version_check_info' );
 add_filter( 'pre_site_transient_update_plugins', 'wpdev_override_version_check_info' );

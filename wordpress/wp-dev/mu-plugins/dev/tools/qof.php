@@ -59,6 +59,11 @@ if(!function_exists('wpdev_remove_version_from_assets')){
 // enable customizer
 add_action( 'customize_register', '__return_true' );
 
+// Disable WordPress image compression
+add_filter('wp_editor_set_quality', function ($arg) {
+    return 100;
+});
+
 // dequeue jQuery Migrate from frontend
 if(!function_exists('wpdev_dequeue_jquery_migrate')){
     function wpdev_dequeue_jquery_migrate( $scripts ) {

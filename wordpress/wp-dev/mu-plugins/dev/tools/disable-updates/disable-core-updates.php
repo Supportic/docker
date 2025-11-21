@@ -52,6 +52,24 @@ function wpdev_disable_update_checks_in_site_health( $tests ) {
 // Disable Site Health checks
 add_filter( 'site_status_tests', 'wpdev_disable_update_checks_in_site_health' );
 
+if(!function_exists('wpdev_override_version_check_info')){
+    /**
+     * Override version check info stored in transients named update_core, update_plugins, update_themes.
+     * Fake last checked time (using __return_null makes the dashboard slow)
+     */
+    function wpdev_override_version_check_info() {
+        include( ABSPATH . WPINC . '/version.php' ); // get $wp_version from here
+        global $wp_version;
+
+        return ( object ) array (
+            'updates' => array (),
+            'response' => array (),
+            'version_checked' => $wp_version,
+            'last_checked' => time(),
+        );
+    }
+}
+
 // Disable core update
 add_filter( 'pre_transient_update_core', 'wpdev_override_version_check_info' );
 add_filter( 'pre_site_transient_update_core', 'wpdev_override_version_check_info' );
