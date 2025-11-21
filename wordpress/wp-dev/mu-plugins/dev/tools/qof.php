@@ -28,10 +28,26 @@ if (!function_exists('wpdev_remove_admin_bar_nodes')) {
 // disable-xmlrpc
 add_filter( 'xmlrpc_enabled', '__return_false' );
 
-// disable-rss-links
+// Disable RSS Feedlinks
 remove_action( 'wp_head', 'feed_links', 2 );
 remove_action( 'wp_head', 'feed_links_extra', 3 );
 add_filter( 'feed_links_show_comments_feed', '__return_false' );
+
+// Disable RSS Feed Message.
+function wpdev_disable_rss_feed() {
+    wp_die(
+        __( 'No feed available, please visit the', 'wpdev' ) . '<a href="' . esc_url( home_url( '/' ) ) . '">' .
+        __( 'homepage', 'wpdev' ) . '</a>!'
+    );
+}
+// Disable RSS Feed.
+add_action( 'do_feed', 'wpdev_disable_rss_feed', 1 );
+add_action( 'do_feed_rdf', 'wpdev_disable_rss_feed', 1 );
+add_action( 'do_feed_rss', 'wpdev_disable_rss_feed', 1 );
+add_action( 'do_feed_rss2', 'wpdev_disable_rss_feed', 1 );
+add_action( 'do_feed_atom', 'wpdev_disable_rss_feed', 1 );
+add_action( 'do_feed_rss2_comments', 'wpdev_disable_rss_feed', 1 );
+add_action( 'do_feed_atom_comments', 'wpdev_disable_rss_feed', 1 );
 
 // hide the meta tag generator from head
 // remove versions from styles and scripts (only for WP)
