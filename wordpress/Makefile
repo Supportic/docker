@@ -31,7 +31,7 @@ erase:
 	$(MAKE) delete-wordpress
 	docker compose down -v --rmi all
 
-install: install-precondition install-image install-wordpress
+install: install-precondition install-images start install-wordpress
 reinstall: remove install
 # reset WP to default installation
 reset:
@@ -44,10 +44,11 @@ install-precondition:
 		exit 1;\
 	fi
 
-install-image:
+update-images: install-images down start
+
+install-images:
 	docker compose build --pull wordpress wpcli
 	docker compose pull db memcached adminer mailpit
-	$(MAKE) start
 	@docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true") > /dev/null 2>&1 || true
 
 install-wordpress:
