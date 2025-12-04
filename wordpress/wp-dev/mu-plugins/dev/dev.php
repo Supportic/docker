@@ -38,6 +38,7 @@ function is_login_page()
 include_once __DIR__.'/tools/disable-core-updates.php';
 include_once __DIR__.'/tools/redirect-logged-in.php';
 include_once __DIR__.'/tools/auto-login-user-switcher.php';
+include_once __DIR__.'/tools/remove-comments.php';
 include_once __DIR__.'/tools/mailpit.php';
 include_once __DIR__.'/tools/qof.php';
 include_once __DIR__.'/tools/qm.php';
