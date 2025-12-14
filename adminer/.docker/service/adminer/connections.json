@@ -1,0 +1,9 @@
+[
+  {
+    "label": "Local Dev (File Config)",
+    "driver": "server",
+    "server": "db:3306",
+    "username": "admin",
+    "password": "admin"
+  }
+]
