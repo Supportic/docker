@@ -148,16 +148,17 @@ services:
     image: adminer:latest
     environment:
       # https://github.com/vrana/adminer/tree/master/plugins
-      # ADMINER_PLUGINS: "tinymce tables-filter login-servers"
+      ADMINER_PLUGINS: "tables-filter edit-calendar edit-textarea"
       # https://github.com/vrana/adminer/tree/master/designs
       # ADMINER_DESIGN: "nicu"
       # default server entry in the login form
-      ADMINER_DEFAULT_SERVER: "${PROJECT_NAME}-db"
+      # ADMINER_DEFAULT_SERVER: "db"
+      ADMINER_SERVERS_JSON: '[{"server":"db:3306","username":"${DB_USER}","password":"${DB_PASS}","db":"${DB_NAME}","label":"Local Dev WordPress"}]'
     restart: unless-stopped
     ports:
       - "${ADMINER_PORT_HOST:-8080}:8080" # web ui
     volumes:
-      - ./.docker/service/adminer/index.php:/var/www/html/index.php:ro
+      - ./.docker/service/adminer/plugins/autologin.php:/var/www/html/plugins/autologin.php
 
   ########################
   # Email Catcher

@@ -85,7 +85,8 @@ alternatively:
 
 ## Autologin Plugin
 
-Displays a selection field in the login form to quickly login into provided connections.
+Displays a selection field in the login form to quickly login into provided connections.  
+Requires to instantiate the Autologin class because multiple classes defined in plugin file.
 
 ### Option 1: ENV Variable
 
@@ -114,6 +115,18 @@ adminer:
   user: adminer
   volumes:
     - ./.docker/service/adminer/plugins/autologin.php:/var/www/html/plugins/autologin.php
+    - ./.docker/service/adminer/plugins-enabled/autologin.php:/var/www/html/plugins-enabled/autologin.php
+```
+
+```php
+// plugins-enabled/autologin.php
+<?php
+
+declare(strict_types=1);
+
+require_once 'plugins/autologin.php';
+
+return new Autologin();
 ```
 
 ### Option 2: connections.json
@@ -127,12 +140,24 @@ adminer:
   user: adminer
   volumes:
     - ./.docker/service/adminer/plugins/autologin.php:/var/www/html/plugins/autologin.php
+    - ./.docker/service/adminer/plugins-enabled/autologin.php:/var/www/html/plugins-enabled/autologin.php
     - ./.docker/service/adminer/connections.json:/var/www/html/connections.json
 ```
 
-### Option 3: AutologinServer class
+```php
+// plugins-enabled/autologin.php
+<?php
 
-Create a custom plugin and use the internal AutologinServer class to create connections.
+declare(strict_types=1);
+
+require_once 'plugins/autologin.php';
+
+return new Autologin();
+```
+
+### Option 3: AutologinServer constructor parameter
+
+Pass AutologinServer classes as array parameter into the constructor.
 
 ```yaml
 adminer:
@@ -144,6 +169,7 @@ adminer:
 ```
 
 ```php
+// plugins-enabled/autologin.php
 <?php
 
 declare(strict_types=1);
@@ -157,7 +183,7 @@ return new Autologin([
 
 ## DEV
 
-##### Translations
+### Translations
 
 Translate strings in your plugin via the `$translations` class property and `$this->lang()` function.
 
@@ -175,7 +201,7 @@ class Autologin extends Adminer\Plugin
 }
 ```
 
-##### Plugin description
+### Plugin description
 
 Displays a description of your plugin in the loaded plugins list (database overview page)
 
@@ -198,7 +224,7 @@ class Autologin extends Adminer\Plugin
 
 Option 2: Putting a PHP comment description above your class
 
-##### use Adminer functions
+### use Adminer functions
 
 Option1: class reference: `$this->lang()`
 
