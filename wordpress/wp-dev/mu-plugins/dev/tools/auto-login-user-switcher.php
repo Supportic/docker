@@ -31,8 +31,11 @@ License:      MIT
  */
 function wpdev_add_auto_login_user_switcher()
 {
+    // Show the switcher if user is logged out OR in a reauth scenario
+    $isReauth = isset($_GET['reauth']) && $_GET['reauth'] === '1';
+    $isLoggedIn = is_user_logged_in() && !$isReauth;
 
-    if (!is_local_environment() || !is_login_page() || is_user_logged_in()) {
+    if (!is_local_environment() || !is_login_page() || $isLoggedIn) {
         return;
     }
 
@@ -81,7 +84,11 @@ add_action('login_form', 'wpdev_add_auto_login_user_switcher');
 // auto submit the form when a user is selected
 function wpdev_add_auto_login_user_switcher_script()
 {
-    if (!is_local_environment() || !is_login_page() || is_user_logged_in()) {
+    // Render the script if user is logged out OR in a reauth scenario
+    $isReauth = isset($_GET['reauth']) && $_GET['reauth'] === '1';
+    $isLoggedIn = is_user_logged_in() && !$isReauth;
+
+    if (!is_local_environment() || !is_login_page() || $isLoggedIn) {
         return;
     }
 
@@ -129,10 +136,22 @@ function wpdev_bypass_authenticate_for_auto_login_user_switcher($user, $username
         return $user;
     }
 
-    $isVerifiedNonce = isset($_POST['auto_login_user_switcher_nonce']) && wp_verify_nonce($_POST['auto_login_user_switcher_nonce'], 'auto_login_user_switcher_login');
+    if (!isset($_POST['auto_login_user_switcher_nonce'])) {
+        return new WP_Error(
+            'invalid_auto_login_nonce',
+            __('Nonce token is missing. Your session may have expired. Please refresh and try again.', 'wpdev')
+        );
+    }
 
-    if (!$isVerifiedNonce) {
-        return new WP_Error('invalid_auto_login_nonce', __('You do not have permissions to perform this action.', 'wpdev'));
+    $isVerifiedNonce = wp_verify_nonce($_POST['auto_login_user_switcher_nonce'], 'auto_login_user_switcher_login');
+
+    if ($isVerifiedNonce === false) {
+        $isReauth = isset($_GET['reauth']) && $_GET['reauth'] === '1';
+        $errorMsg = $isReauth
+            ? __('Nonce token expired during session refresh. This is normal after deleting cookies. Please reload this page to get a fresh nonce token.', 'wpdev')
+            : __('Security check failed: Invalid or expired nonce token. Cookies may have been cleared. Please reload the login page.', 'wpdev');
+
+        return new WP_Error('invalid_auto_login_nonce', $errorMsg);
     }
 
     $autoLoginUserId = absint($_POST['auto_login_user_switcher_user_id']);
@@ -162,7 +181,8 @@ function wpdev_handle_auto_login_user_switcher($user_login, $user)
 
     $is_verified_nonce = isset($_POST['auto_login_user_switcher_nonce']) && wp_verify_nonce($_POST['auto_login_user_switcher_nonce'], 'auto_login_user_switcher_login');
 
-    if (!$is_verified_nonce) {
+    // 1 if the nonce is valid and generated between 0-12 hours ago, 2 if the nonce is valid and generated between 12-24 hours ago. False if the nonce is invalid
+    if ($is_verified_nonce === false) {
         wp_clear_auth_cookie();
         wp_destroy_current_session();
         wp_die(esc_html__('You do not have permissions to perform this action.', 'wpdev'), esc_html__('Permission Denied', 'wpdev'), ['response' => 403, 'back_link' => true]);

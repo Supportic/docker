@@ -20,9 +20,12 @@ function wpdev_redirect_logged_in()
         return;
     }
 
-    // providing an action should not redirect the user because it means that the user should interact with the login page
+    $hasAction = isset($_GET['action']);
+    $isReauth = isset($_GET['reauth']) && $_GET['reauth'] === '1';
+
+    // providing an action or reauth query param should not automatically redirect the user because it means that the user should interact with the login page
     // https://developer.wordpress.org/reference/hooks/login_form_action/
-    if (isset($_GET['action'])) {
+    if ($hasAction || $isReauth) {
         return;
     }
 
