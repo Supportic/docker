@@ -123,7 +123,7 @@ add_action('login_enqueue_scripts', 'wpdev_add_auto_login_user_switcher_script')
 function wpdev_bypass_authenticate_for_auto_login_user_switcher($user, $username, $password)
 {
     // If we are NOT local OR NOT on the login page, bail.
-    if (! is_local_environment() || ! is_login_page()) {
+    if (!is_local_environment() || !is_login_page() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
         return $user;
     }
 
@@ -145,25 +145,61 @@ function wpdev_bypass_authenticate_for_auto_login_user_switcher($user, $username
 
     $isVerifiedNonce = wp_verify_nonce($_POST['auto_login_user_switcher_nonce'], 'auto_login_user_switcher_login');
 
-    if ($isVerifiedNonce === false) {
-        $isReauth = isset($_GET['reauth']) && $_GET['reauth'] === '1';
-        $errorMsg = $isReauth
-            ? __('Nonce token expired during session refresh. This is normal after deleting cookies. Please reload this page to get a fresh nonce token.', 'wpdev')
-            : __('Security check failed: Invalid or expired nonce token. Cookies may have been cleared. Please reload the login page.', 'wpdev');
+    // skip nonce verification for reauth
+    $referer = wp_get_referer();
+    $isReauth = false;
+    if ($referer !== false) {
+        $query_string = wp_parse_url($referer, PHP_URL_QUERY);
+        $params = [];
+        parse_str($query_string, $params);
+        $isReauth = isset($params['reauth']) && $params['reauth'] === '1';
 
-        return new WP_Error('invalid_auto_login_nonce', $errorMsg);
+        if ($isReauth) {
+            $isVerifiedNonce = true;
+        }
+    }
+
+    if ($isVerifiedNonce === false) {
+        return new WP_Error(
+            'invalid_auto_login_nonce',
+            __('Invalid or expired nonce token. Cookies may have been cleared. Please reload the login page.', 'wpdev')
+        );
     }
 
     $autoLoginUserId = absint($_POST['auto_login_user_switcher_user_id']);
+
     $user = get_user_by('id', $autoLoginUserId);
 
     if (!$user instanceof WP_User) {
         return new WP_Error('invalid_user', __('Login failed. Invalid user ID.', 'wpdev'));
     }
 
+    // user has switched during reauth
+    if ($isReauth && $user->user_login !== $username) {
+        // User is switching to a different user - mark this for redirect handling
+        set_transient('auto_login_user_switcher_user_changed', true, 30);
+    }
+
     return $user;
 }
 add_filter('authenticate', 'wpdev_bypass_authenticate_for_auto_login_user_switcher', 10, 3);
+
+/**
+ * Handle login redirect when user has switched during reauth
+ */
+function wpdev_handle_login_redirect_on_user_switch($redirect_to, $requested_redirect_to, $user)
+{
+    // Only handle if we detected a user switch
+    if (!get_transient('auto_login_user_switcher_user_changed')) {
+        return $redirect_to;
+    }
+
+    delete_transient('auto_login_user_switcher_user_changed');
+
+    // Always redirect to admin when switching users during reauth
+    return admin_url();
+}
+add_filter('login_redirect', 'wpdev_handle_login_redirect_on_user_switch', 10, 3);
 
 /**
  * Legacy code, not used anymore, kept for reference.
@@ -182,6 +218,7 @@ function wpdev_handle_auto_login_user_switcher($user_login, $user)
     $is_verified_nonce = isset($_POST['auto_login_user_switcher_nonce']) && wp_verify_nonce($_POST['auto_login_user_switcher_nonce'], 'auto_login_user_switcher_login');
 
     // 1 if the nonce is valid and generated between 0-12 hours ago, 2 if the nonce is valid and generated between 12-24 hours ago. False if the nonce is invalid
+
     if ($is_verified_nonce === false) {
         wp_clear_auth_cookie();
         wp_destroy_current_session();
@@ -207,7 +244,7 @@ function wpdev_handle_auto_login_user_switcher($user_login, $user)
     // default: redirect the user to the admin dashboard.
     $redirect_to = admin_url();
 
-    if (! empty($_REQUEST['redirect_to'])) {
+    if (!empty($_REQUEST['redirect_to'])) {
         $redirect_to = wp_sanitize_redirect($_REQUEST['redirect_to']);
     }
 
