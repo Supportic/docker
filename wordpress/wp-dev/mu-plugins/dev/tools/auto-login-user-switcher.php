@@ -175,7 +175,7 @@ function wpdev_bypass_authenticate_for_auto_login_user_switcher($user, $username
     }
 
     // user has switched during reauth
-    if ($isReauth && $user->user_login !== $username) {
+    if ($isReauth && $username !== '' && $user->user_login !== $username) {
         // User is switching to a different user - mark this for redirect handling
         set_transient('auto_login_user_switcher_user_changed', true, 30);
     }
