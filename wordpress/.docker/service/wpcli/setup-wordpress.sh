@@ -46,6 +46,10 @@ if ! wp --url="$url" core is-installed; then
   wp user meta update "$(wp user list --field=ID --role=administrator)" show_welcome_panel 0
   wp user meta update "$(wp user list --field=ID --role=subscriber)" show_welcome_panel 0
 
+  # setup WordPress editor view
+  wp user meta update "$(wp user list --field=ID --role=administrator)" wp_persisted_preferences "{\"core/edit-post\":{\"welcomeGuide\": false,\"fullscreenMode\": false}}" --format=json
+  wp user meta update "$(wp user list --field=ID --role=subscriber)" wp_persisted_preferences "{\"core/edit-post\":{\"welcomeGuide\": false,\"fullscreenMode\": false}}" --format=json
+
   # delete existing pages and posts (and connected comments)
   wp post delete $(wp post list --post_type='page,post' --format=ids) --force
 
