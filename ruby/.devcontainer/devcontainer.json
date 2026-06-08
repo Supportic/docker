@@ -1,0 +1,97 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-outside-of-docker-compose
+{
+  "name": "Ruby Development",
+  "dockerComposeFile": "../compose.yaml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  "runServices": [],
+  // "runServices": ["devcontainer"],
+
+  // starting user within the container DEVCONTAINER_USER
+  // "remoteUser": "docker",
+
+  // locally
+  // "initializeCommand": "[ ! -f .env ] && echo 'Copy and adjust values .env.sample => .env'; exit 1;",
+  // inside container
+  // "onCreateCommand": "on-create-command",
+  // "postCreateCommand": {
+  // "install-assets": "post-create-command",
+  // },
+  // "postStartCommand": "post-start-command",
+  // "postAttachCommand": "",
+
+  "init": true,
+
+  // Use this environment variable if you need to bind mount your local source code into a new container.
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "configureZshAsDefaultShell": true,
+      "upgradePackages": true
+    },
+    "ghcr.io/cirolosapio/devcontainers-features/alpine-docker-outside-of-docker:0": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  // "forwardPorts": [80],
+  "portsAttributes": {
+    // "80": {
+    //   "label": "Ruby",
+    //   "onAutoForward": "silent"
+    // },
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+        "tasks": {
+          "version": "2.0.0",
+          "tasks": []
+        },
+        "launch": {
+          "version": "0.2.0",
+          "configurations": [],
+          "compounds": []
+        }
+      },
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "stylelint.vscode-stylelint",
+        "the0807.git-graph-plus",
+        "hollowtree.vue-snippets",
+        "dbaeumer.vscode-eslint",
+        "jock.svg",
+        "bradlc.vscode-tailwindcss",
+        "EditorConfig.EditorConfig",
+        "oouo-diogo-perdigao.docthis",
+        "DavidAnson.vscode-markdownlint",
+        "shd101wyy.markdown-preview-enhanced",
+        "yzhang.markdown-all-in-one",
+        "christian-kohler.npm-intellisense",
+        "cipchk.cssrem",
+        "mrmlnc.vscode-scss",
+        "gencer.html-slim-scss-css-class-completion",
+        "meganrogge.template-string-converter",
+        "sleistner.vscode-fileutils",
+        "zyrong.node-modules",
+        "codeandstuff.package-json-upgrade",
+        "GitHub.copilot-chat",
+        "ms-azuretools.vscode-containers",
+        "timonwong.shellcheck",
+        "redhat.vscode-yaml",
+        "redhat.vscode-xml",
+        "DotJoshJohnson.xml",
+        "Shopify.ruby-extensions-pack",
+        "KoichiSasada.vscode-rdbg",
+        "castwide.solargraph"
+      ]
+    }
+  }
+}

@@ -1,0 +1,132 @@
+name: ${PROJECT_NAME}
+
+volumes:
+  db_data:
+    name: ${PROJECT_NAME}-dbdata
+networks:
+  default:
+    name: ${PROJECT_NAME}-network
+    driver: bridge
+
+services:
+  ########################
+  # Server
+  ########################
+  ruby:
+    container_name: ${PROJECT_NAME}-ruby
+    image: ${PROJECT_NAME}/ruby:0.0.1
+    user: ${UNAME}
+    restart: unless-stopped
+    build:
+      context: .docker/service/ruby
+      target: develop
+      args:
+        UID: ${UID}
+        GID: ${GID}
+        UNAME: ${UNAME}
+        GNAME: ${GNAME}
+        PASS: ${PASS}
+        TZ: ${TZ}
+        RUBY_VERSION: ${RUBY_VERSION}
+        NODE_VERSION: ${NODE_VERSION}
+    volumes:
+      - ./app:/rails
+    ports:
+      - "127.0.0.1:${SERVER_PORT_HOST:-80}:80" # web ui
+
+  ########################
+  # Development
+  ########################
+  # dev:
+  #   container_name: ${PROJECT_NAME}-dev
+  #   image: ${PROJECT_NAME}/dev:0.0.1
+  #   user: ${UNAME}
+  #   restart: unless-stopped
+  #   build:
+  #     context: .docker/service/ruby
+  #     target: develop
+  #     args:
+  #       UID: ${UID}
+  #       GID: ${GID}
+  #       UNAME: ${UNAME}
+  #       GNAME: ${GNAME}
+  #       PASS: ${PASS}
+  #       TZ: ${TZ}
+  #       RUBY_VERSION: ${RUBY_VERSION}
+  #       NODE_VERSION: ${NODE_VERSION}
+  #   volumes:
+  #     - app:/rails
+
+  ########################
+  # Database
+  ########################
+  db:
+    container_name: ${PROJECT_NAME}-db
+    image: postgres:${POSTGRES_VERSION}-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${DB_USER} -d ${DB_NAME}'"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      PGPASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - db_data:/var/lib/postgresql
+
+  ########################
+  # Database UI
+  ########################
+  adminer:
+    container_name: ${PROJECT_NAME}-adminer
+    image: adminer:latest
+    user: adminer
+    restart: unless-stopped
+    environment:
+      # https://github.com/vrana/adminer/tree/master/plugins
+      # listing plugins here will move them from /plugins to /plugins-enabled
+      ADMINER_PLUGINS: "tables-filter edit-calendar edit-textarea"
+      # https://github.com/vrana/adminer/tree/master/designs
+      # ADMINER_DESIGN: "nicu"
+      # default server entry in the login form
+      # ADMINER_DEFAULT_SERVER: "db"
+      ADMINER_SERVERS_JSON: '[{"driver":"pgsql","server":"db:5432","username":"${DB_USER}","password":"${DB_PASS}","db":"${DB_NAME}","label":"Local Dev Ruby"}]'
+    ports:
+      - "127.0.0.1:${ADMINER_PORT_HOST:-8080}:8080" # web ui
+    volumes:
+      - ./.docker/service/adminer/plugins/autologin.php:/var/www/html/plugins/autologin.php
+      - ./.docker/service/adminer/plugins-enabled/autologin.php:/var/www/html/plugins-enabled/autologin.php
+
+  ########################
+  # Devcontainer
+  #######################
+  devcontainer:
+    container_name: ${PROJECT_NAME}-devcontainer
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        BASE_IMAGE: ${PROJECT_NAME}/dev:0.0.1
+        UNAME: ${UNAME}
+    user: ${UNAME}
+    init: true
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME}
+    # volumes:
+      # dont add relative paths ~/ here, restarting the container will net recognize them anymore (try $PWD)
+      # - wp_data:/var/www/html:rw
+      # - .:/workspace
+    network_mode: service:ruby
+
+    # Uncomment the next four lines if you will use a ptrace-based debugger like C++, Go, and Rust.
+    # cap_add:
+    #   - SYS_PTRACE
+    # security_opt:
+    #   - seccomp:unconfined
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
