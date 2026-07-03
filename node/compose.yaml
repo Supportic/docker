@@ -2,6 +2,8 @@
 
 services:
   node:
+    container_name: ${PROJECT_NAME}-node
+    image: ${PROJECT_NAME}/node:0.0.1
     build:
       context: .
       dockerfile: .docker/service/node/Dockerfile
@@ -11,10 +13,8 @@ services:
         - GID=${GID}
         - UNAME=${UNAME}
         - GNAME=${GNAME}
+        - PASS=${PASS}
       target: develop
-    image: ${PROJECT_NAME}-node:0.0.1
-    platform: linux/amd64
-    container_name: ${NODE_CONTAINER_NAME:-node}
     user: ${UID:-1000}
     working_dir: /app
     volumes:
